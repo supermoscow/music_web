@@ -1,0 +1,147 @@
+<!-- app/templates/base.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}音乐数据平台{% endblock %}</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#722ED1',
+            accent: '#FF7D00',
+            neutral: {
+              100: '#F5F7FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+              700: '#1D2129',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .tooltip {
+        position: absolute;
+        opacity: 0;
+        transition: opacity 0.3s, transform 0.3s;
+        transform: translateY(10px);
+        pointer-events: none;
+        z-index: 50;
+      }
+      .tooltip-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+
+  {% block head %}{% endblock %}
+</head>
+<body class="font-inter bg-neutral-100 text-neutral-700">
+  <!-- 导航栏 -->
+  <header class="fixed w-full bg-white shadow-md z-50">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <a href="{{ url_for('home.index') }}" class="flex items-center space-x-2">
+        <i class="fa-solid fa-music text-2xl text-primary"></i>
+        <span class="text-xl font-bold text-neutral-700">音乐数据平台</span>
+      </a>
+
+      <nav class="hidden md:flex space-x-8">
+        <a href="{{ url_for('home.index') }}" class="text-neutral-600 hover:text-primary transition-colors font-medium">首页</a>
+        <a href="{{ url_for('hot.index') }}" class="text-primary font-medium border-b-2 border-primary pb-1">热点分析</a>
+        <a href="{{ url_for('cover.index') }}" class="text-neutral-600 hover:text-primary transition-colors font-medium">封面制作</a>
+        <a href="{{ url_for('tools.index') }}" class="text-neutral-600 hover:text-primary transition-colors font-medium">创作工具</a>
+        <a href="{{ url_for('learn.index') }}" class="text-neutral-600 hover:text-primary transition-colors font-medium">学习中心</a>
+      </nav>
+
+      <button class="md:hidden text-neutral-600 focus:outline-none">
+        <i class="fa-solid fa-bars text-xl"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="pt-16">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="py-12 bg-neutral-800 text-white">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h4 class="text-lg font-bold mb-4">音乐数据平台</h4>
+          <p class="text-neutral-400">
+            专业的音乐数据分析与创作平台，助力音乐人成长与发展。
+          </p>
+        </div>
+        <div>
+          <h4 class="text-lg font-bold mb-4">快速链接</h4>
+          <ul class="space-y-2">
+            <li><a href="{{ url_for('home.index') }}" class="text-neutral-400 hover:text-white">首页</a></li>
+            <li><a href="{{ url_for('hot.index') }}" class="text-neutral-400 hover:text-white">热点分析</a></li>
+            <li><a href="{{ url_for('cover.index') }}" class="text-neutral-400 hover:text-white">封面制作</a></li>
+            <li><a href="{{ url_for('tools.index') }}" class="text-neutral-400 hover:text-white">创作工具</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-bold mb-4">联系我们</h4>
+          <ul class="space-y-2">
+            <li class="flex items-center">
+              <i class="fa-solid fa-envelope mr-2 text-neutral-400"></i>
+              <a href="mailto:contact@yourdomain.com" class="text-neutral-400 hover:text-white">contact@yourdomain.com</a>
+            </li>
+            <li class="flex items-center">
+              <i class="fa-solid fa-phone mr-2 text-neutral-400"></i>
+              <span class="text-neutral-400">+86 123 4567 8910</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-bold mb-4">关注我们</h4>
+          <div class="flex space-x-4">
+            <a href="#" class="w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa-brands fa-weibo"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa-brands fa-wechat"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa-brands fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 pt-8 border-t border-neutral-700 text-center text-neutral-400">
+        <p>© 2025 音乐数据平台 | 所有权利保留</p>
+      </div>
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
