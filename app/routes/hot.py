@@ -36,3 +36,8 @@ def get_charts_data():
 def index():
     charts_data = get_charts_data()
     return render_template('hot/index.html', charts=charts_data)
+
+@hot_bp.route('/charts')
+def charts():
+    charts_data = get_charts_data()
+    return render_template('hot/charts.html', charts=charts_data)

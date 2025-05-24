@@ -1,10 +1,44 @@
-{% extends "base.html" %}
+<!-- app/blueprints/hot/templates/index.html -->
+{% extends 'base.html' %}
+
+{% block title %}热点分析{% endblock %}
 
 {% block content %}
-<h1>最新推荐</h1>
-<ul>
-    {% for song in featured %}
-    <li>{{ song.title }} - {{ song.artist }}</li>
-    {% endfor %}
-</ul>
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral-700">热点分析</h2>
+        <p class="text-neutral-500 mt-3 max-w-2xl mx-auto">
+          实时掌握音乐行业动态，分析热门歌曲、趋势和听众喜好，助您把握创作方向
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {% for table, songs in charts.items() %}
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+            <div class="bg-primary p-4">
+              <h3 class="text-white text-xl font-bold">{{ table.capitalize() }} 榜单</h3>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                {% for song in songs %}
+                  <div class="flex items-center">
+                    <span class="bg-primary/10 text-primary font-bold rounded-full w-8 h-8 flex items-center justify-center mr-4">{{ song.rank }}</span>
+                    <div class="flex-1">
+                      <h4 class="font-medium">{{ song.name }}</h4>
+                      <p class="text-sm text-neutral-500">{{ song.singer }}</p>
+                    </div>
+                    <span class="text-accent font-medium">{{ song.time }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+              <a href="#" class="mt-6 inline-block text-primary font-medium hover:underline">
+                查看完整榜单 <i class="fa-solid fa-angle-right ml-1"></i>
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
 {% endblock %}
