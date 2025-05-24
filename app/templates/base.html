@@ -1,19 +1,22 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}音乐网站{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <nav class="main-nav">
-        <a href="{{ url_for('index.index') }}">首页</a>
-        <a href="{{ url_for('hot.hot_list') }}">热门</a>
-    </nav>
+# app/models.py
 
-    <main class="container">
-        {% block content %}{% endblock %}
-    </main>
-</body>
-</html>
+class BaseSong(db.Model):
+    __abstract__ = True  # 声明为抽象基类
+    rank = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    time = db.Column(db.Integer)  # 时长（秒）
+    singer = db.Column(db.String(50))
+    link = db.Column(db.String(200))  # 歌曲链接
+
+# 定义各榜单模型
+class Up(BaseSong):
+    __tablename__ = 'up'
+
+class Hot(BaseSong):
+    __tablename__ = 'hot'
+
+class New(BaseSong):
+    __tablename__ = 'new'
+
+class Original(BaseSong):
+    __tablename__ = 'original'

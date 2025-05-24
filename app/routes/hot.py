@@ -1,43 +1,31 @@
-# app/blueprints/hot/routes.py
 from flask import Blueprint, render_template
-import sqlite3
+from app.models import Up, Hot, New, Original
 
-hot_bp = Blueprint('hot', __name__, url_prefix='/hot')
+bp = Blueprint('hot', __name__)
 
-def get_charts_data():
-    conn = sqlite3.connect('your_database.db')  # 替换为你的数据库文件名
-    cursor = conn.cursor()
 
-    charts_data = {
-        'up': [],
-        'hot': [],
-        'new': [],
-        'original': []
-    }
+@bp.route('/hot')
+def show_hot_charts():
+    try:
+        # 获取各榜单数据（按排名排序）
+        up_chart = Up.query.order_by(Up.rank).all()
+        hot_chart = Hot.query.order_by(Hot.rank).all()
+        new_chart = New.query.order_by(New.rank).all()
+        original_chart = Original.query.order_by(Original.rank).all()
 
-    tables = ['up', 'hot', 'new', 'original']
-    for table in tables:
-        cursor.execute(f"SELECT rank, name, time, singer, link FROM {table}")
-        rows = cursor.fetchall()
-        for row in rows:
-            rank, name, time, singer, link = row
-            charts_data[table].append({
-                'rank': rank,
-                'name': name,
-                'time': time,
-                'singer': singer,
-                'link': link
-            })
+        return render_template('hot.html',
+                               up_chart=up_chart,
+                               hot_chart=hot_chart,
+                               new_chart=new_chart,
+                               original_chart=original_chart)
+    except Exception as e:
+        return f"数据库查询失败: {str(e)}", 500
 
-    conn.close()
-    return charts_data
 
-@hot_bp.route('/')
-def index():
-    charts_data = get_charts_data()
-    return render_template('hot/index.html', charts=charts_data)
+def format_duration(seconds):
+    """秒转换为分:秒格式"""
+    return f"{seconds // 60}:{seconds % 60:02d}"
 
-@hot_bp.route('/charts')
-def charts():
-    charts_data = get_charts_data()
-    return render_template('hot/charts.html', charts=charts_data)
+
+def init_app(app):
+    app.add_template_filter(format_duration, 'format_duration')
