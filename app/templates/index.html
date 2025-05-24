@@ -1,39 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}音乐推荐 | {{ super() }}{% endblock %}
-
 {% block content %}
-<section class="music-section">
-    <h2 class="section-title">🔥 热门推荐</h2>
-    <div class="song-grid">
-        {% for song in featured %}
-        <div class="song-card" data-song-id="{{ song.id }}">
-            <div class="cover">
-                <img src="{{ url_for('static', filename='images/covers/' + song.id|string + '.jpg') }}"
-                     alt="{{ song.title }}封面">
-            </div>
-            <h3 class="title">{{ song.title }}</h3>
-            <p class="artist">{{ song.artist }}</p>
-            <button class="play-btn" onclick="playSong({{ song.id }})">
-                <span class="icon">▶</span>播放
-            </button>
-        </div>
-        {% else %}
-        <p class="empty-tip">暂无推荐歌曲</p>
-        {% endfor %}
-    </div>
-</section>
-
-<section class="new-section">
-    <h2 class="section-title">✨ 最新发布</h2>
-    <ul class="song-list">
-        {% for song in new_releases %}
-        <li class="song-item">
-            <span class="order">{{ loop.index }}.</span>
-            <span class="title">{{ song.title }}</span>
-            <span class="badge">NEW</span>
-        </li>
-        {% endfor %}
-    </ul>
-</section>
+<h1>最新推荐</h1>
+<ul>
+    {% for song in featured %}
+    <li>{{ song.title }} - {{ song.artist }}</li>
+    {% endfor %}
+</ul>
 {% endblock %}
