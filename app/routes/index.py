@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template
 
-bp = Blueprint('index', __name__)
+index_bp = Blueprint('index', __name__)
 
-@bp.route('/')
+@index_bp.route('/')
 def index():
     # 模拟数据
     mock_data = {

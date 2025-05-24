@@ -24,8 +24,8 @@ def create_app():
     migrate.init_app(app, db)
 
     # 注册蓝图
-    from app.routes.hot import bp as hot_bp
-    from app.routes.index import bp as index_bp
+    from app.routes.hot import  hot_bp
+    from app.routes.index import index_bp
 
     app.register_blueprint(index_bp)
     app.register_blueprint(hot_bp, url_prefix='/hot')
