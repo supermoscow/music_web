@@ -1,7 +1,6 @@
 # app/__init__.py
-from flask import Flask
+from flask import Flask, render_template
 from config import Config
-
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -11,6 +10,9 @@ def create_app(config_class=Config):
     from app.blueprints.hot.routes import hot_bp
     app.register_blueprint(hot_bp)
 
-    # 其他蓝图的注册...
+    # 添加根路径视图函数
+    @app.route('/')
+    def index():
+        return render_template('index.html')
 
     return app

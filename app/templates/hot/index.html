@@ -1,0 +1,103 @@
+<!-- app/hot/hot/index.html -->
+{% extends 'base.html' %}
+
+{% block title %}热点分析 - 音乐数据平台{% endblock %}
+
+{% block content %}
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral-700">热点分析</h2>
+        <p class="text-neutral-500 mt-3 max-w-2xl mx-auto">
+          实时掌握音乐行业动态，分析热门歌曲、趋势和听众喜好，助您把握创作方向
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- 歌曲榜单卡片 -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+          <div class="bg-primary p-4">
+            <h3 class="text-white text-xl font-bold">歌曲榜单</h3>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div class="flex items-center">
+                <span class="bg-primary/10 text-primary font-bold rounded-full w-8 h-8 flex items-center justify-center mr-4">1</span>
+                <div class="flex-1">
+                  <h4 class="font-medium">晴天</h4>
+                  <p class="text-sm text-neutral-500">周杰伦</p>
+                </div>
+                <span class="text-accent font-medium">98.5</span>
+              </div>
+              <div class="flex items-center">
+                <span class="bg-primary/10 text-primary font-bold rounded-full w-8 h-8 flex items-center justify-center mr-4">2</span>
+                <div class="flex-1">
+                  <h4 class="font-medium">后来</h4>
+                  <p class="text-sm text-neutral-500">刘若英</p>
+                </div>
+                <span class="text-accent font-medium">95.2</span>
+              </div>
+              <div class="flex items-center">
+                <span class="bg-primary/10 text-primary font-bold rounded-full w-8 h-8 flex items-center justify-center mr-4">3</span>
+                <div class="flex-1">
+                  <h4 class="font-medium">海阔天空</h4>
+                  <p class="text-sm text-neutral-500">Beyond</p>
+                </div>
+                <span class="text-accent font-medium">92.7</span>
+              </div>
+            </div>
+            <a href="{{ url_for('hot.charts') }}" class="mt-6 inline-block text-primary font-medium hover:underline">
+              查看完整榜单 <i class="fa-solid fa-angle-right ml-1"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- 歌曲云图卡片 -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+          <div class="bg-secondary p-4">
+            <h3 class="text-white text-xl font-bold">歌曲云图</h3>
+          </div>
+          <div class="p-6">
+            <img src="https://picsum.photos/id/1025/400/250" alt="歌曲云图" class="w-full h-48 object-cover rounded-lg mb-4">
+            <p class="text-neutral-600 mb-4">基于热门歌曲关键词生成的云图，直观展示当前音乐趋势和流行元素。</p>
+            <a href="#" class="mt-2 inline-block text-secondary font-medium hover:underline">
+              生成自定义云图 <i class="fa-solid fa-angle-right ml-1"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- 歌曲分析卡片 -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+          <div class="bg-accent p-4">
+            <h3 class="text-white text-xl font-bold">歌曲分析</h3>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-medium">评论情感分析</span>
+              <span class="text-sm text-neutral-500">积极率: 85%</span>
+            </div>
+            <div class="w-full bg-neutral-200 rounded-full h-2.5 mb-6">
+              <div class="bg-green-500 h-2.5 rounded-full" style="width: 85%"></div>
+            </div>
+
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-medium">热门关键词</span>
+              <span class="text-sm text-neutral-500">查看全部</span>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-6">
+              <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">青春</span>
+              <span class="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm">回忆</span>
+              <span class="bg-accent/10 text-accent px-3 py-1 rounded-full text-sm">爱情</span>
+              <span class="bg-neutral-200 text-neutral-600 px-3 py-1 rounded-full text-sm">成长</span>
+              <span class="bg-neutral-200 text-neutral-600 px-3 py-1 rounded-full text-sm">梦想</span>
+            </div>
+
+            <a href="#" class="mt-2 inline-block text-accent font-medium hover:underline">
+              详细分析报告 <i class="fa-solid fa-angle-right ml-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
