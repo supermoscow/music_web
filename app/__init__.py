@@ -15,9 +15,14 @@ def create_app():
     migrate.init_app(app, db)
 
     # 注册蓝图
-    from app.routes.index import bp as index_bp
-    from app.routes.hot import bp as hot_bp
-    app.register_blueprint(index_bp)
-    app.register_blueprint(hot_bp, url_prefix='/hot')
+
+    # 注册路由
+    from .routes import index, hot, tool
+    app.register_blueprint(index.bp)
+    app.register_blueprint(hot.bp)
+    app.register_blueprint(tool.bp)
+
+    # 配置文件上传限制
+    app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
 
     return app

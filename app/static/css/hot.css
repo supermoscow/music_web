@@ -1,58 +1,37 @@
-.charts-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 2rem;
-    padding: 2rem;
+/* 热门页卡片样式 */
+.hot-page .card {
+    transition: transform 0.3s ease;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.chart-card {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    padding: 1.5rem;
-    transition: transform 0.2s;
+.hot-page .card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-.chart-card:hover {
-    transform: translateY(-5px);
+.hot-page .card-header {
+    border-radius: 15px 15px 0 0;
 }
 
-.chart-title {
-    color: #2c3e50;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #3498db;
+.hot-page .list-group-item {
+    border: none;
+    transition: background-color 0.3s ease;
 }
 
-.chart-table {
-    width: 100%;
-    border-collapse: collapse;
+.hot-page .list-group-item:hover {
+    background-color: #f8f9fa;
 }
 
-.chart-table th {
-    background: #3498db;
-    color: white;
-    padding: 12px;
-    text-align: left;
+/* 曲库检索按钮样式 */
+.hot-page .btn-lg {
+    font-size: 1.25rem;
+    padding: 1rem 2rem;
+    border-radius: 30px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.chart-table td {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-}
-
-.chart-table a {
-    color: #2c3e50;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.chart-table a:hover {
-    color: #3498db;
-    text-decoration: underline;
-}
-
-.rank {
-    font-weight: bold;
-    color: #e74c3c;
+.hot-page .btn-lg:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
 }

@@ -51,3 +51,16 @@ class Song(db.Model):
     year = db.Column(db.Integer)
     release = db.Column(db.String(100))  # album改为release
     duration = db.Column(db.Integer)
+
+
+
+    #
+class ChordAndKeyAnalysis(db.Model):
+    __tablename__ = 'chord_and_key_analysis'
+
+    id = db.Column(db.Integer, primary_key=True)
+    song_id = db.Column(db.Integer, db.ForeignKey('songs.id'))
+    chord_info = db.Column(db.Text)
+    key_analysis = db.Column(db.String(50))
+
+    song = db.relationship('Song', backref=db.backref('chord_and_key_analyses', lazy='dynamic'))

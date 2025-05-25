@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tool-container">
+    <aside class="tool-sidebar">
+        <h2>音乐分析工具</h2>
+        <nav>
+            <a href="{{ url_for('tool.analyse') }}" class="active">和弦/调式分析</a>
+            <!-- 其他工具链接 -->
+
+        </nav>
+    </aside>
+
+    <main class="tool-main">
+        {% block tool_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

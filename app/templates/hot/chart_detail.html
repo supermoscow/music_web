@@ -2,60 +2,90 @@
 
 {% block content %}
 <section class="container py-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-5">
     <div>
-      <h1 class="display-5 mb-2">
-        <i class="bi bi-music-note-beamed"></i> {{ chart_type }}榜
+      <h1 class="display-5 fw-bold mb-2">
+        <i class="bi bi-trophy me-3"></i>{{ chart_type }}榜
       </h1>
-      <nav aria-label="breadcrumb">
+      <nav style="--bs-breadcrumb-divider: '›';" aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{{ url_for('hot.hot') }}">热门榜单</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('hot.hot') }}">首页</a></li>
           <li class="breadcrumb-item active" aria-current="page">{{ chart_type }}榜</li>
         </ol>
       </nav>
     </div>
-    <a href="{{ url_for('hot.hot') }}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> 返回首页
-    </a>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary" data-bs-toggle="tooltip" title="分享榜单">
+        <i class="bi bi-share"></i>
+      </button>
+      <a href="{{ url_for('hot.hot') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>返回
+      </a>
+    </div>
   </div>
 
-  <div class="card shadow">
-    <div class="card-header bg-light">
-      <h4 class="mb-0">完整榜单列表</h4>
+  <div class="card shadow-lg">
+    <div class="card-header bg-white py-4">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h4 class="mb-0">完整榜单数据</h4>
+        </div>
+        <div class="col-md-6 text-end">
+          <div class="btn-group">
+            <button class="btn btn-outline-secondary active">实时榜</button>
+            <button class="btn btn-outline-secondary">历史榜</button>
+            <button class="btn btn-outline-secondary">趋势图</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-primary">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
           <tr>
-            <th style="width: 60px">排名</th>
+            <th style="width: 80px" class="text-center">排名</th>
             <th>歌曲信息</th>
-            <th style="width: 120px">时长</th>
+            <th style="width: 100px" class="text-center">时长</th>
             <th style="width: 200px">发行信息</th>
+            <th style="width: 120px" class="text-center">操作</th>
           </tr>
         </thead>
         <tbody>
           {% for song in songs %}
           <tr>
             <td class="text-center">
-              <span class="badge bg-primary rounded-pill">#{{ song.rank }}</span>
+              <span class="badge bg-primary badge-custom">#{{ song.rank }}</span>
             </td>
             <td>
               <div class="d-flex align-items-center">
-                <div class="ms-3">
+                <img src="https://via.placeholder.com/40"
+                     class="rounded me-3"
+                     alt="专辑封面">
+                <div>
                   <h6 class="mb-1">{{ song.name }}</h6>
                   <small class="text-muted">{{ song.singer }}</small>
                 </div>
               </div>
             </td>
-            <td>
-              {{ song.time or "未知时长" }}
-            </td>
+            <td class="text-center fw-bold">{{ song.time }}</td>
             <td>
               <div class="text-muted small">
-                <div>{{ song.release }}</div>
-                <div>{{ song.year or "未知年份" }}</div>
+                <div class="text-truncate">{{ song.release }}</div>
+                <div>{{ song.year }}</div>
               </div>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary"
+                      data-bs-toggle="tooltip"
+                      title="播放">
+                <i class="bi bi-play-circle"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-secondary"
+                      data-bs-toggle="tooltip"
+                      title="收藏">
+                <i class="bi bi-heart"></i>
+              </button>
             </td>
           </tr>
           {% endfor %}
@@ -65,13 +95,11 @@
   </div>
 </section>
 
-<style>
-.table-hover tbody tr:hover {
-  background-color: rgba(13, 110, 253, 0.05);
-}
-.breadcrumb {
-  background-color: transparent;
-  padding: 0;
-}
-</style>
+<script>
+// 初始化工具提示
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+})
+</script>
 {% endblock %}
