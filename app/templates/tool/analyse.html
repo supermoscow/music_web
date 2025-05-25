@@ -1,148 +1,76 @@
 {% extends "tool/tool.html" %}
-{% block tool_content %}
-<div class="audioviz-container">
-    <!-- 文件上传区 -->
-    <div class="upload-area">
-        <input type="file" id="audioInput" accept=".wav,.mp3">
+
+{% block content %}
+<div class="analysis-container">
+    <h2>🎵 音频分析</h2>
+
+    <div class="upload-box">
+        <input type="file" id="audioFile" accept=".mp3,.wav">
         <div class="drop-zone">
-            <span class="upload-icon">↑</span>
+            <i class="upload-icon">↑</i>
             <p>拖放音频文件或点击选择</p>
         </div>
+        <div class="progress-bar"></div>
     </div>
 
-    <!-- 可视化展示区 -->
-    <div class="visualization">
-        <div class="waveform-container">
-            <canvas id="waveform"></canvas>
+    <div class="results">
+        <div class="key-result">
+            <h3>🎼 调式：<span id="keyResult">-</span></h3>
+            <h3>🔄 进行模式：<span id="progressionResult">-</span></h3>
         </div>
+
         <div class="chord-timeline">
-            <canvas id="chordCanvas"></canvas>
+            <div id="timelineChart"></div>
         </div>
-    </div>
 
-    <!-- 结果表格 -->
-    <div class="result-table">
-        <table>
-            <thead>
-                <tr><th>时间</th><th>和弦</th></tr>
-            </thead>
-            <tbody id="chordTableBody"></tbody>
-        </table>
+        <div class="chord-table">
+            <table>
+                <thead>
+                    <tr><th>时间</th><th>和弦</th><th>置信度</th></tr>
+                </thead>
+                <tbody id="chordTableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- 从参考仓库整合的JS逻辑 -->
-<script src="{{ url_for('static', filename='js/audioviz.js') }}"></script>
+<link href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0"></script>
+<script src="{{ url_for('static', filename='js/analysis.js') }}"></script>
+
 <style>
-/* 从参考仓库整合的CSS样式 */
-.upload-area {
+/* 样式表 */
+.analysis-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.upload-box {
     border: 2px dashed #ccc;
     padding: 2rem;
+    margin: 2rem 0;
     text-align: center;
+}
+
+.chord-timeline {
     margin: 2rem 0;
-    position: relative;
+    height: 200px;
 }
-.drop-zone {
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-.upload-icon {
-    font-size: 3rem;
-    color: #666;
-}
-.visualization {
-    margin: 2rem 0;
-    border: 1px solid #eee;
-    padding: 1rem;
-}
-canvas {
-    width: 100%;
-    height: 150px;
-}
-.result-table table {
+
+.chord-table table {
     width: 100%;
     border-collapse: collapse;
 }
-.result-table th, .result-table td {
-    padding: 0.5rem;
+
+.chord-table th, .chord-table td {
+    padding: 0.8rem;
     border: 1px solid #ddd;
+    text-align: center;
+}
+
+#timelineChart {
+    margin: 1rem 0;
 }
 </style>
-
-<script>
-// 整合的交互逻辑
-document.getElementById('audioInput').addEventListener('change', function(e) {
-    handleFile(e.target.files[0]);
-});
-
-const dropZone = document.querySelector('.drop-zone');
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.style.backgroundColor = '#f8f9fa';
-});
-dropZone.addEventListener('dragleave', () => {
-    dropZone.style.backgroundColor = 'transparent';
-});
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    handleFile(e.dataTransfer.files[0]);
-    dropZone.style.backgroundColor = 'transparent';
-});
-
-async function handleFile(file) {
-    if (!file.type.match('audio.*')) {
-        alert('请上传音频文件');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        // 显示加载状态
-        dropZone.innerHTML = '<div class="spinner"></div>分析中...';
-
-        const response = await fetch('/tool/api/analyze', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-
-        if (data.error) throw new Error(data.error);
-
-        // 渲染可视化
-        renderWaveform(file);
-        renderChordTimeline(data.chords);
-        updateResultTable(data.chords);
-
-    } catch (error) {
-        alert('分析失败: ' + error.message);
-    } finally {
-        dropZone.innerHTML = `
-            <span class="upload-icon">↑</span>
-            <p>拖放音频文件或点击选择</p>
-        `;
-    }
-}
-
-function renderWaveform(file) {
-    // 实现波形绘制（需要集成wavesurfer.js）
-}
-
-function renderChordTimeline(chords) {
-    // 实现和弦时间轴可视化
-}
-
-function updateResultTable(chords) {
-    const tbody = document.getElementById('chordTableBody');
-    tbody.innerHTML = chords.map(c => `
-        <tr>
-            <td>${c.time.toFixed(2)}s</td>
-            <td>${c.chord}</td>
-        </tr>
-    `).join('');
-}
-</script>
 {% endblock %}
