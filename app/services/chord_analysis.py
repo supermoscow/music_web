@@ -39,10 +39,12 @@ class ChordAnalyzer:
 
     def _template_matching(self, chroma: np.ndarray):
         """使用你提供的模板匹配逻辑"""
-        # 此处调用你提供的generate_chord_templates和chord_recognition_template函数
         templates = self._generate_templates()
-        chroma_norm = self._normalize(chroma)
-        templates_norm = self._normalize(templates)
+
+        # 使用修正后的归一化方法
+        chroma_norm = self._normalize(chroma, norm_type=np.inf)  # 明确指定归一化类型
+        templates_norm = self._normalize(templates, norm_type=np.inf)
+
         sim_matrix = templates_norm.T @ chroma_norm
         chord_max = np.argmax(sim_matrix, axis=0)
         return sim_matrix, chord_max
@@ -54,6 +56,6 @@ class ChordAnalyzer:
         pass
 
     @staticmethod
-    def _normalize(matrix: np.ndarray, norm_type='max'):
+    def _normalize(matrix: np.ndarray, norm_type=np.inf):
         """特征归一化"""
         return librosa.util.normalize(matrix, norm=norm_type, axis=0)
