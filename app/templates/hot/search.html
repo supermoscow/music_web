@@ -1,103 +1,172 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="search-page">
+<section class="container py-5">
+  <h1 class="mb-4 text-center display-5">
+    <i class="bi bi-search me-2"></i>高级曲库检索
+  </h1>
+
   <!-- 搜索表单 -->
-  <div class="search-form">
-    <h2>曲库高级检索</h2>
-    <form method="POST">
-      <div class="form-row">
-        <div class="form-group">
-          <label>歌曲名称：</label>
-          <input type="text"
-                 name="title"
-                 value="{{ form_data.title }}"
-                 placeholder="支持模糊搜索">
-        </div>
+  <div class="card shadow mb-5">
+    <div class="card-body">
+      {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
 
-        <div class="form-group">
-          <label>歌手名称：</label>
-          <input type="text"
-                 name="artist"
-                 value="{{ form_data.artist }}"
-                 placeholder="支持模糊搜索">
-        </div>
-      </div>
+      <form method="POST">
+        <div class="row g-3">
+          <!-- 左侧列 -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">歌曲名称</label>
+              <input type="text" name="title"
+                     value="{{ form_data.title }}"
+                     class="form-control"
+                     placeholder="支持模糊搜索">
+            </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>专辑名称：</label>
-          <input type="text"
-                 name="album"
-                 value="{{ form_data.album }}"
-                 placeholder="精确匹配">
-        </div>
+            <div class="mb-3">
+              <label class="form-label">发行公司</label>
+              <input type="text" name="release"
+                     value="{{ form_data.release }}"
+                     class="form-control"
+                     placeholder="输入发行公司名称">
+            </div>
 
-        <div class="form-group">
-          <label>音乐调式：</label>
-          <select name="key">
-            <option value="">全部调式</option>
-            <option value="C" {% if form_data.key == 'C' %}selected{% endif %}>C大调</option>
-            <option value="G" {% if form_data.key == 'G' %}selected{% endif %}>G大调</option>
-            <!-- 添加更多选项 -->
-          </select>
-        </div>
-      </div>
+            <div class="mb-3">
+              <label class="form-label">节奏范围 (BPM)</label>
+              <div class="input-group">
+                <input type="number" name="tempo_min"
+                       value="{{ form_data.tempo_min }}"
+                       class="form-control"
+                       placeholder="最小值" min="0">
+                <span class="input-group-text">-</span>
+                <input type="number" name="tempo_max"
+                       value="{{ form_data.tempo_max }}"
+                       class="form-control"
+                       placeholder="最大值" max="300">
+              </div>
+            </div>
+          </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>节奏范围（BPM）：</label>
-          <div class="tempo-range">
-            <input type="number"
-                   name="tempo_min"
-                   value="{{ form_data.tempo_min }}"
-                   min="0"
-                   placeholder="最小值">
-            <span>-</span>
-            <input type="number"
-                   name="tempo_max"
-                   value="{{ form_data.tempo_max }}"
-                   max="300"
-                   placeholder="最大值">
+          <!-- 右侧列 -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">歌手名称</label>
+              <input type="text" name="artist"
+                     value="{{ form_data.artist }}"
+                     class="form-control"
+                     placeholder="支持模糊搜索">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">音乐调式</label>
+              <select name="key" class="form-select">
+                <option value="">全部调式</option>
+                {% for num, name in KEY_MAPPING.items() %}
+                <option value="{{ name }}"
+                        {% if form_data.key == name %}selected{% endif %}>
+                  {{ name }}大调
+                </option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
         </div>
-      </div>
 
-      <button type="submit" class="search-button">
-        <i class="fas fa-search"></i> 立即检索
-      </button>
-    </form>
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-lightning-charge"></i> 立即搜索
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- 搜索结果 -->
-  {% if search_count > 0 %}
+  {% if request.method == 'POST' %}
   <div class="search-results">
-    <h3>找到 {{ search_count }} 条结果</h3>
+    <h3 class="mb-4">
+      找到 {{ search_count }} 条结果
+      <small class="text-muted fs-6">（按发行年份降序排列）</small>
+    </h3>
 
-    <div class="result-list">
+    {% if results %}
+    <div class="row row-cols-1 row-cols-lg-2 g-4">
       {% for song in results %}
-      <div class="song-card">
-        <div class="song-main">
-          <h4>{{ song.title }}</h4>
-          <div class="meta">
-            <span class="artist">{{ song.artist }}</span>
-            <span class="album">{{ song.album }}</span>
+      <div class="col">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h4 class="card-title mb-0">{{ song.title }}</h4>
+              <span class="badge bg-primary">
+                {{ KEY_MAPPING.get(song.key, '未知') }}
+              </span>
+            </div>
+
+            <div class="mb-3">
+              <span class="text-muted">
+                <i class="bi bi-person"></i> {{ song.artist }}
+              </span>
+              <span class="mx-2">|</span>
+              <span class="text-muted">
+                <i class="bi bi-speedometer2"></i> {{ song.tempo }} BPM
+              </span>
+            </div>
+
+            <div class="song-meta">
+              <div class="row g-2">
+                <div class="col-6">
+                  <div class="border p-2 rounded">
+                    <small class="text-muted d-block">发行年份</small>
+                    <span class="fw-bold">{{ song.year or '未知' }}</span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="border p-2 rounded">
+                    <small class="text-muted d-block">时长</small>
+                    <span class="fw-bold">
+                      {{ "%02d"|format(song.duration//60) }}:{{ "%02d"|format(song.duration%60) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <small class="text-muted">
+                <i class="bi bi-building"></i> 发行公司：{{ song.release }}
+              </small>
+            </div>
           </div>
-        </div>
-        <div class="song-details">
-          <span class="key">{{ song.key }}大调</span>
-          <span class="tempo">{{ song.tempo }} BPM</span>
-          <span class="year">{{ song.year }}</span>
         </div>
       </div>
       {% endfor %}
     </div>
-  </div>
-  {% elif request.method == 'POST' %}
-  <div class="no-results">
-    <i class="fas fa-info-circle"></i>
-    没有找到符合条件的歌曲
+    {% else %}
+    <div class="alert alert-warning">
+      <i class="bi bi-exclamation-triangle"></i> 没有找到符合条件的歌曲
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 </section>
+
+<style>
+.search-results .card {
+  transition: transform 0.2s;
+  border-radius: 12px;
+}
+.search-results .card:hover {
+  transform: translateY(-3px);
+}
+.badge.bg-primary {
+  font-size: 0.9em;
+  padding: 0.5em 0.8em;
+  border-radius: 10px;
+}
+.song-meta .border {
+  border-color: #dee2e6 !important;
+}
+</style>
 {% endblock %}

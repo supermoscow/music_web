@@ -1,69 +1,77 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="chart-detail">
-  <h2>{{ chart_type|upper }}榜</h2>
-
-  <div class="song-list">
-    {% for song in all_songs %}
-    <div class="song-item {% if loop.index > 10 %}extra-song{% endif %}">
-      <span class="rank">{{ song.rank }}</span>
-      <div class="song-info">
-        <span class="name">{{ song.name }}</span>
-        <span class="singer">{{ song.singer }}</span>
-      </div>
-      <span class="duration">{{ song.time//60 }}:{{ '%02d' % (song.time%60) }}</span>
+<section class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="display-5 mb-2">
+        <i class="bi bi-music-note-beamed"></i> {{ chart_type }}榜
+      </h1>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('hot.hot') }}">热门榜单</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ chart_type }}榜</li>
+        </ol>
+      </nav>
     </div>
-    {% endfor %}
+    <a href="{{ url_for('hot.hot') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> 返回首页
+    </a>
   </div>
 
-  {% if all_songs|length > 10 %}
-  <div class="toggle-container">
-    <button class="toggle-btn" onclick="toggleSongs()">
-      查看完整榜单 ▼
-    </button>
+  <div class="card shadow">
+    <div class="card-header bg-light">
+      <h4 class="mb-0">完整榜单列表</h4>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-primary">
+          <tr>
+            <th style="width: 60px">排名</th>
+            <th>歌曲信息</th>
+            <th style="width: 120px">时长</th>
+            <th style="width: 200px">发行信息</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for song in songs %}
+          <tr>
+            <td class="text-center">
+              <span class="badge bg-primary rounded-pill">#{{ song.rank }}</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="ms-3">
+                  <h6 class="mb-1">{{ song.name }}</h6>
+                  <small class="text-muted">{{ song.singer }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              {{ song.time or "未知时长" }}
+            </td>
+            <td>
+              <div class="text-muted small">
+                <div>{{ song.release }}</div>
+                <div>{{ song.year or "未知年份" }}</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-  {% endif %}
-</div>
+</section>
 
 <style>
-.extra-song {
-  display: none;
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
 }
-
-.song-list.expanded .extra-song {
-  display: flex !important;
-}
-
-.toggle-btn {
-  padding: 10px 20px;
-  background: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.toggle-btn:hover {
-  background: #1864ab;
+.breadcrumb {
+  background-color: transparent;
+  padding: 0;
 }
 </style>
-
-<script>
-function toggleSongs() {
-  const list = document.querySelector('.song-list');
-  const btn = document.querySelector('.toggle-btn');
-
-  list.classList.toggle('expanded');
-
-  if (list.classList.contains('expanded')) {
-    btn.innerHTML = '收起榜单 ▲';
-    // 滚动到按钮位置（可选）
-    btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } else {
-    btn.innerHTML = '查看完整榜单 ▼';
-  }
-}
-</script>
 {% endblock %}

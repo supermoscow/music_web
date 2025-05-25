@@ -1,139 +1,114 @@
 from flask import Blueprint, render_template, request, abort
 from app.models import Hot, New, Original, Up, Song
-from collections import Counter
+from sqlalchemy import and_
 
 bp = Blueprint('hot', __name__, url_prefix='/hot')
+
+# 音调映射字典
+KEY_MAPPING = {
+    1: 'C', 2: 'C#', 3: 'D', 4: 'D#', 5: 'E',
+    6: 'F', 7: 'F#', 8: 'G', 9: 'G#', 10: 'A',
+    11: 'A#', 12: 'B'
+}
 
 
 @bp.route('/')
 def hot():
     """热门页主路由"""
-    # 获取各榜单前10歌曲
     chart_data = {
-        'hot': get_top_songs(Hot),
-        'new': get_top_songs(New),
-        'original': get_top_songs(Original),
-        'up': get_top_songs(Up)
+        'hot': {'display': '热歌榜', 'songs': get_top_songs(Hot)},
+        'new': {'display': '新歌榜', 'songs': get_top_songs(New)},
+        'original': {'display': '原创榜', 'songs': get_top_songs(Original)},
+        'up': {'display': '飙升榜', 'songs': get_top_songs(Up)}
     }
-    return render_template('hot/hot.html', charts=chart_data)
-
-
-@bp.route('/charts')
-def all_charts():
-    """全部榜单列表页"""
-    return render_template('hot/charts.html')
+    return render_template('hot/hot.html',
+                           charts=chart_data,
+                           KEY_MAPPING=KEY_MAPPING)
 
 
 @bp.route('/charts/<chart_type>')
 def chart_detail(chart_type):
-    """榜单详情页（带展开功能）"""
+    """榜单详情页"""
     model = get_chart_model(chart_type)
     if not model:
-        abort(404, description="无效的榜单类型")
+        abort(404, description=f"无效的榜单类型: {chart_type}")
 
-    all_songs = model.query.order_by(model.rank).all()
+    songs = model.query.order_by(model.rank).all()
     return render_template('hot/chart_detail.html',
-                           chart_type=chart_type,
-                           all_songs=all_songs)
+                           chart_type=chart_type.capitalize(),
+                           songs=songs)
 
-# 搜索页面（集成结果显示）
+
 @bp.route('/search', methods=['GET', 'POST'])
 def search():
-    form_data = initialize_form_data()
+    form_data = {
+        'title': request.form.get('title', '').strip(),
+        'artist': request.form.get('artist', '').strip(),
+        'release': request.form.get('release', '').strip(),  # 改为release
+        'key': request.form.get('key', ''),
+        'tempo_min': request.form.get('tempo_min', '60'),
+        'tempo_max': request.form.get('tempo_max', '180')
+    }
+
     results = []
     search_count = 0
+    error = None
 
     if request.method == 'POST':
-        form_data = get_form_data(request.form)
-        results, search_count = perform_search(form_data)
+        try:
+            # 验证节奏范围
+            tempo_min = int(form_data['tempo_min'])
+            tempo_max = int(form_data['tempo_max'])
+            if tempo_min > tempo_max:
+                tempo_min, tempo_max = tempo_max, tempo_min
+
+            # 构建查询
+            query = Song.query
+            if form_data['title']:
+                query = query.filter(Song.title.ilike(f"%{form_data['title']}%"))
+            if form_data['artist']:
+                query = query.filter(Song.artist.ilike(f"%{form_data['artist']}%"))
+            if form_data['release']:  # 模糊搜索发行公司
+                query = query.filter(Song.release.ilike(f"%{form_data['release']}%"))
+
+            # 调式筛选
+            if form_data['key']:
+                try:
+                    key_number = [k for k, v in KEY_MAPPING.items() if v == form_data['key']][0]
+                    query = query.filter(Song.key == key_number)
+                except IndexError:
+                    pass
+
+            query = query.filter(and_(
+                Song.tempo >= tempo_min,
+                Song.tempo <= tempo_max
+            ))
+
+            results = query.order_by(Song.year.desc()).all()
+            search_count = len(results)
+
+        except ValueError:
+            error = "请输入有效的节奏范围数值"
 
     return render_template('hot/search.html',
                            form_data=form_data,
                            results=results,
-                           search_count=search_count)
+                           search_count=search_count,
+                           error=error,
+                           KEY_MAPPING=KEY_MAPPING)
 
 
 # --------------------------
 # 辅助函数
 # --------------------------
-
 def get_top_songs(model, limit=10):
-    """获取指定榜单前N首歌曲"""
     return model.query.order_by(model.rank).limit(limit).all()
 
 
-def generate_word_cloud():
-    """生成词云数据"""
-    words = []
-    # 从三个字段提取关键词
-    for field in [Song.title, Song.artist, Song.album]:
-        records = Song.query.with_entities(field).all()
-        for record in records:
-            words.extend(str(record[0]).split())
-
-    word_counts = Counter(words)
-    return [{"text": k, "size": int(v)} for k, v in word_counts.most_common(30)]
-
 def get_chart_model(chart_type):
-    """获取对应的榜单模型"""
-    model_map = {
+    return {
         'hot': Hot,
         'new': New,
         'original': Original,
         'up': Up
-    }
-    return model_map.get(chart_type.lower())
-
-
-def initialize_form_data():
-    """初始化空表单数据"""
-    return {
-        'title': '',
-        'artist': '',
-        'album': '',
-        'key': '',
-        'tempo_min': '60',
-        'tempo_max': '180'
-    }
-
-
-def get_form_data(form):
-    """从表单获取数据并格式化"""
-    return {
-        'title': form.get('title', '').strip(),
-        'artist': form.get('artist', '').strip(),
-        'album': form.get('album', '').strip(),
-        'key': form.get('key', ''),
-        'tempo_min': form.get('tempo_min', '60'),
-        'tempo_max': form.get('tempo_max', '180')
-    }
-
-
-def perform_search(form_data):
-    """执行搜索查询"""
-    query = Song.query
-
-    # 文本过滤
-    if form_data['title']:
-        query = query.filter(Song.title.ilike(f"%{form_data['title']}%"))
-    if form_data['artist']:
-        query = query.filter(Song.artist.ilike(f"%{form_data['artist']}%"))
-    if form_data['album']:
-        query = query.filter(Song.album == form_data['album'])
-
-    # 调式筛选
-    if form_data['key']:
-        query = query.filter(Song.key == form_data['key'])
-
-    # 处理节奏范围
-    try:
-        tempo_min = int(form_data['tempo_min'])
-        tempo_max = int(form_data['tempo_max'])
-        if tempo_min > tempo_max:
-            tempo_min, tempo_max = tempo_max, tempo_min
-        query = query.filter(Song.tempo.between(tempo_min, tempo_max))
-    except ValueError:
-        pass
-
-    results = query.order_by(Song.year.desc()).all()
-    return results, len(results)
+    }.get(chart_type.lower())

@@ -96,3 +96,20 @@
     background: #4a90e2;
     color: white;
 }
+
+/* 调式徽章样式 */
+.key-badge {
+    background: #4a90e2;
+    color: white;
+    border-radius: 15px;
+    padding: 2px 10px;
+    font-size: 0.9em;
+    display: inline-block;
+}
+
+/* 发行公司信息样式 */
+.release-info {
+    color: #666;
+    font-size: 0.95em;
+    margin-top: 5px;
+}

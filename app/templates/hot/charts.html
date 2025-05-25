@@ -1,9 +1,101 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>所有榜单</h1>
-<ul>
-  <li><a href="{{ url_for('hot.chart_detail', chart_type='hot') }}">热歌榜</a></li>
-  <li><a href="{{ url_for('hot.chart_detail', chart_type='new') }}">新歌榜</a></li>
-</ul>
+<section class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-5">
+      <i class="bi bi-music-note-list"></i> 全部音乐榜单
+    </h1>
+    <a href="{{ url_for('hot.hot') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> 返回热门页
+    </a>
+  </div>
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+    <!-- 热歌榜 -->
+    <div class="col">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-danger text-white">
+          <h3 class="mb-0">
+            <i class="bi bi-fire"></i> 热歌榜
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="card-text">根据全网播放量实时更新的热门歌曲排行</p>
+          <a href="{{ url_for('hot.chart_detail', chart_type='hot') }}"
+             class="btn btn-danger">
+            查看榜单 <i class="bi bi-chevron-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新歌榜 -->
+    <div class="col">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-success text-white">
+          <h3 class="mb-0">
+            <i class="bi bi-stars"></i> 新歌榜
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="card-text">最新发布的优质音乐作品排行</p>
+          <a href="{{ url_for('hot.chart_detail', chart_type='new') }}"
+             class="btn btn-success">
+            查看榜单 <i class="bi bi-chevron-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 原创榜 -->
+    <div class="col">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">
+            <i class="bi bi-pen"></i> 原创榜
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="card-text">原创音乐人作品热度排行</p>
+          <a href="{{ url_for('hot.chart_detail', chart_type='original') }}"
+             class="btn btn-primary">
+            查看榜单 <i class="bi bi-chevron-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 飙升榜 -->
+    <div class="col">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-warning text-dark">
+          <h3 class="mb-0">
+            <i class="bi bi-graph-up-arrow"></i> 飙升榜
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="card-text">近期热度上升最快的歌曲排行</p>
+          <a href="{{ url_for('hot.chart_detail', chart_type='up') }}"
+             class="btn btn-warning">
+            查看榜单 <i class="bi bi-chevron-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.card-header {
+  border-radius: 15px 15px 0 0 !important;
+}
+.card {
+  transition: transform 0.2s;
+  border-radius: 15px;
+}
+.card:hover {
+  transform: translateY(-5px);
+}
+</style>
 {% endblock %}
