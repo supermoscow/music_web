@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>所有榜单</h1>
+<ul>
+  <li><a href="{{ url_for('hot.chart_detail', chart_type='hot') }}">热歌榜</a></li>
+  <li><a href="{{ url_for('hot.chart_detail', chart_type='new') }}">新歌榜</a></li>
+</ul>
+{% endblock %}

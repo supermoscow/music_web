@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="search-page">
+  <!-- 搜索表单 -->
+  <div class="search-form">
+    <h2>曲库高级检索</h2>
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label>歌曲名称：</label>
+          <input type="text"
+                 name="title"
+                 value="{{ form_data.title }}"
+                 placeholder="支持模糊搜索">
+        </div>
+
+        <div class="form-group">
+          <label>歌手名称：</label>
+          <input type="text"
+                 name="artist"
+                 value="{{ form_data.artist }}"
+                 placeholder="支持模糊搜索">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>专辑名称：</label>
+          <input type="text"
+                 name="album"
+                 value="{{ form_data.album }}"
+                 placeholder="精确匹配">
+        </div>
+
+        <div class="form-group">
+          <label>音乐调式：</label>
+          <select name="key">
+            <option value="">全部调式</option>
+            <option value="C" {% if form_data.key == 'C' %}selected{% endif %}>C大调</option>
+            <option value="G" {% if form_data.key == 'G' %}selected{% endif %}>G大调</option>
+            <!-- 添加更多选项 -->
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>节奏范围（BPM）：</label>
+          <div class="tempo-range">
+            <input type="number"
+                   name="tempo_min"
+                   value="{{ form_data.tempo_min }}"
+                   min="0"
+                   placeholder="最小值">
+            <span>-</span>
+            <input type="number"
+                   name="tempo_max"
+                   value="{{ form_data.tempo_max }}"
+                   max="300"
+                   placeholder="最大值">
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="search-button">
+        <i class="fas fa-search"></i> 立即检索
+      </button>
+    </form>
+  </div>
+
+  <!-- 搜索结果 -->
+  {% if search_count > 0 %}
+  <div class="search-results">
+    <h3>找到 {{ search_count }} 条结果</h3>
+
+    <div class="result-list">
+      {% for song in results %}
+      <div class="song-card">
+        <div class="song-main">
+          <h4>{{ song.title }}</h4>
+          <div class="meta">
+            <span class="artist">{{ song.artist }}</span>
+            <span class="album">{{ song.album }}</span>
+          </div>
+        </div>
+        <div class="song-details">
+          <span class="key">{{ song.key }}大调</span>
+          <span class="tempo">{{ song.tempo }} BPM</span>
+          <span class="year">{{ song.year }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% elif request.method == 'POST' %}
+  <div class="no-results">
+    <i class="fas fa-info-circle"></i>
+    没有找到符合条件的歌曲
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
