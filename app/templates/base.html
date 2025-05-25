@@ -1,22 +1,14 @@
-# app/models.py
-
-class BaseSong(db.Model):
-    __abstract__ = True  # 声明为抽象基类
-    rank = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    time = db.Column(db.Integer)  # 时长（秒）
-    singer = db.Column(db.String(50))
-    link = db.Column(db.String(200))  # 歌曲链接
-
-# 定义各榜单模型
-class Up(BaseSong):
-    __tablename__ = 'up'
-
-class Hot(BaseSong):
-    __tablename__ = 'hot'
-
-class New(BaseSong):
-    __tablename__ = 'new'
-
-class Original(BaseSong):
-    __tablename__ = 'original'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}音乐网站{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index.index') }}">首页</a>
+        <a href="{{ url_for('hot.hot') }}">热门榜单</a>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+</html>
