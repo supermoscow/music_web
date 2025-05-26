@@ -58,6 +58,7 @@
     border-radius: 4px;
     cursor: pointer;
 }
+
 .tool-container {
     display: grid;
     grid-template-columns: 200px 1fr;
@@ -99,3 +100,48 @@ button {
     border-radius: 4px;
     cursor: pointer;
 }
+
+#piano-container {
+    position: relative !important;
+    width: 900px !important;
+    height: 180px !important;
+    margin: 20px auto !important;
+    user-select: none !important;
+    display: block !important;
+}
+
+.piano-key {
+    position: absolute !important;
+    bottom: 0 !important;
+    border: 1px solid #333 !important;
+    border-radius: 0 0 5px 5px !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    transition: background 0.1s !important;
+    display: block !important;
+}
+
+.white-key {
+    width: 40px !important;
+    height: 180px !important;
+    background: #fff !important;
+    z-index: 1 !important;
+     position: absolute !important;
+}
+
+.black-key {
+    width: 26px !important;
+    height: 110px !important;
+    background: #222 !important;
+    z-index: 2 !important;
+    position: absolute !important;
+
+    top: 0 !important;
+    bottom: auto !important;
+}
+
+.piano-key.active {
+    background: #ffd700 !important;
+}
+
+

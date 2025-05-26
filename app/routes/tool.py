@@ -90,3 +90,33 @@ def download_stem():
     if not os.path.exists(file_path):
         return "File not found", 404
     return send_file(file_path, as_attachment=True)
+
+@bp.route('/inspiration', methods=['GET'])
+def inspiration():
+    return render_template('tool/inspiration.html')
+
+@bp.route('/api/drum_styles')
+def api_drum_styles():
+    drum_root = os.path.join(os.path.dirname(__file__), '../../static/audio/drum')
+    drum_root = os.path.abspath(drum_root)
+    print('[调试] drum_root 路径:', drum_root)
+    if not os.path.isdir(drum_root):
+        print('[调试] drum_root 目录不存在')
+        return jsonify([])
+    styles = [d for d in os.listdir(drum_root) if os.path.isdir(os.path.join(drum_root, d))]
+    print('[调试] drum_styles:', styles)
+    return jsonify(styles)
+
+@bp.route('/api/drum_sounds')
+def api_drum_sounds():
+    style = request.args.get('style', '')
+    drum_root = os.path.join(os.path.dirname(__file__), '../../static/audio/drum')
+    style_dir = os.path.join(drum_root, style)
+    style_dir = os.path.abspath(style_dir)
+    print('[调试] drum_sounds style_dir 路径:', style_dir)
+    if not os.path.isdir(style_dir):
+        print('[调试] style_dir 目录不存在')
+        return jsonify([])
+    files = [f for f in os.listdir(style_dir) if f.lower().endswith('.wav') and os.path.isfile(os.path.join(style_dir, f))]
+    print('[调试] drum_sounds:', files)
+    return jsonify(files)

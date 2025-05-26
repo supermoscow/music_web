@@ -1,4 +1,7 @@
 {% extends "tool/tool.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+{% endblock %}
 {% block content %}
 <div class="container">
     <h2>音轨分离工具</h2>
@@ -46,3 +49,4 @@ function separate() {
 }
 </script>
 {% endblock %}
+
