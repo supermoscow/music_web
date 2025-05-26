@@ -3,6 +3,7 @@ from app.services.audio_analyzer import KeyAnalyzer
 import tempfile
 import os
 from flask import send_file
+from flask import send_file
 
 bp = Blueprint('tool', __name__, url_prefix='/tool')
 
@@ -47,7 +48,6 @@ def handle_key_analysis():
         if os.path.exists(temp_path):
             os.remove(temp_path)
         os.rmdir(temp_dir)
-
 
 
 @bp.route('/track_separate')

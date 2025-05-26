@@ -1,25 +1,9 @@
 import librosa
 import numpy as np
-from spleeter.separator import Separator
 
-class TrackSeparator:
-    def __init__(self):
-        # 4 stems: vocals, drums, bass, other
-        self.separator = Separator('spleeter:4stems')
+import os
+import subprocess
 
-    def separate(self, audio_path, output_dir):
-        self.separator.separate_to_file(audio_path, output_dir)
-        # spleeter输出在 output_dir/原文件名/wav
-        import os
-        base = os.path.splitext(os.path.basename(audio_path))[0]
-        stem_dir = os.path.join(output_dir, base)
-        stems = {
-            "vocals": f"{base}/vocals.wav",
-            "drums": f"{base}/drums.wav",
-            "bass": f"{base}/bass.wav",
-            "other": f"{base}/other.wav"
-        }
-        return stems
 class KeyAnalyzer:
     def __init__(self, sr=22050):
         self.sr = sr
@@ -54,21 +38,26 @@ class KeyAnalyzer:
         return best_key
 
 
+
 class TrackSeparator:
-    def __init__(self):
-        # 4 stems: vocals, drums, bass, other
-        self.separator = Separator('spleeter:4stems')
+    def __init__(self, model='htdemucs'):
+        self.model = model
 
     def separate(self, audio_path, output_dir):
-        self.separator.separate_to_file(audio_path, output_dir)
-        # spleeter输出在 output_dir/原文件名/wav
-        import os
+        # 使用 htdemucs 进行音轨分离
+        cmd = [
+            'demucs',
+            '-n', self.model,
+            '-o', output_dir,
+            audio_path
+        ]
+        subprocess.run(cmd, check=True)
         base = os.path.splitext(os.path.basename(audio_path))[0]
-        stem_dir = os.path.join(output_dir, base)
+        stem_dir = os.path.join(output_dir, self.model, base)
         stems = {
-            "vocals": f"{base}/vocals.wav",
-            "drums": f"{base}/drums.wav",
-            "bass": f"{base}/bass.wav",
-            "other": f"{base}/other.wav"
+            "vocals": os.path.join(stem_dir, "vocals.wav"),
+            "drums": os.path.join(stem_dir, "drums.wav"),
+            "bass": os.path.join(stem_dir, "bass.wav"),
+            "other": os.path.join(stem_dir, "other.wav")
         }
         return stems
