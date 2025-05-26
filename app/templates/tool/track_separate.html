@@ -1,0 +1,48 @@
+{% extends "tool/tool.html" %}
+{% block content %}
+<div class="container">
+    <h2>音轨分离工具</h2>
+    <input type="file" id="audioFile" accept=".mp3,.wav">
+    <button onclick="separate()">分离音轨</button>
+    <div id="loading" style="display:none;">分离中...</div>
+    <div id="result"></div>
+</div>
+<script>
+function separate() {
+    const fileInput = document.getElementById('audioFile');
+    const resultDiv = document.getElementById('result');
+    if (!fileInput.files[0]) {
+        resultDiv.innerHTML = "请先选择音频文件";
+        return;
+    }
+    document.getElementById('loading').style.display = 'block';
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    fetch('/tool/api/track_separate', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        if (data.error) {
+            resultDiv.innerHTML = "错误：" + data.error;
+            return;
+        }
+        let html = '';
+        for (const [name, url] of Object.entries(data.stems)) {
+            html += `<div>
+                <b>${name}</b>：
+                <audio controls src="${url}"></audio>
+                <a href="${url}" download>下载</a>
+            </div>`;
+        }
+        resultDiv.innerHTML = html;
+    })
+    .catch(e => {
+        document.getElementById('loading').style.display = 'none';
+        resultDiv.innerHTML = "分离失败：" + e;
+    });
+}
+</script>
+{% endblock %}

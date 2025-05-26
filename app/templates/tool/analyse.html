@@ -1,76 +1,87 @@
 {% extends "tool/tool.html" %}
 
 {% block content %}
-<div class="analysis-container">
-    <h2>🎵 音频分析</h2>
+<div class="container">
+    <h2>歌曲调式分析</h2>
 
     <div class="upload-box">
         <input type="file" id="audioFile" accept=".mp3,.wav">
-        <div class="drop-zone">
-            <i class="upload-icon">↑</i>
-            <p>拖放音频文件或点击选择</p>
-        </div>
-        <div class="progress-bar"></div>
+        <button onclick="analyze()">分析调式</button>
     </div>
 
-    <div class="results">
-        <div class="key-result">
-            <h3>🎼 调式：<span id="keyResult">-</span></h3>
-            <h3>🔄 进行模式：<span id="progressionResult">-</span></h3>
-        </div>
-
-        <div class="chord-timeline">
-            <div id="timelineChart"></div>
-        </div>
-
-        <div class="chord-table">
-            <table>
-                <thead>
-                    <tr><th>时间</th><th>和弦</th><th>置信度</th></tr>
-                </thead>
-                <tbody id="chordTableBody"></tbody>
-            </table>
-        </div>
+    <div id="result" class="result-box">
+        <!-- 结果将显示在这里 -->
     </div>
 </div>
 
-<link href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0"></script>
-<script src="{{ url_for('static', filename='js/analysis.js') }}"></script>
-
 <style>
-/* 样式表 */
-.analysis-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+.container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    text-align: center;
 }
 
 .upload-box {
+    margin: 30px 0;
+    padding: 20px;
     border: 2px dashed #ccc;
-    padding: 2rem;
-    margin: 2rem 0;
-    text-align: center;
+    border-radius: 8px;
 }
 
-.chord-timeline {
-    margin: 2rem 0;
-    height: 200px;
+button {
+    background: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
 }
 
-.chord-table table {
-    width: 100%;
-    border-collapse: collapse;
+button:hover {
+    background: #45a049;
 }
 
-.chord-table th, .chord-table td {
-    padding: 0.8rem;
+.result-box {
+    margin-top: 30px;
+    padding: 20px;
+    font-size: 24px;
     border: 1px solid #ddd;
-    text-align: center;
-}
-
-#timelineChart {
-    margin: 1rem 0;
+    border-radius: 8px;
+    min-height: 60px;
 }
 </style>
+
+<script>
+function analyze() {
+    const fileInput = document.getElementById('audioFile');
+    const resultDiv = document.getElementById('result');
+
+    if (!fileInput.files[0]) {
+        resultDiv.innerHTML = "请先选择音频文件";
+        return;
+    }
+
+    resultDiv.innerHTML = "分析中...";
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    fetch('/tool/api/analyse', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        resultDiv.innerHTML = `🎼 检测结果：${data.key}`;
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `错误：${error.message}`;
+    });
+}
+</script>
 {% endblock %}
