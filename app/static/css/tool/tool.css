@@ -1,0 +1,147 @@
+/* 工具页面布局 */
+.tool-container {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+.tool-sidebar {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.tool-sidebar li {
+    margin: 10px 0;
+    list-style: none;
+}
+
+/* 和弦分析页面样式 */
+.chord-analysis {
+    max-width: 800px;
+}
+
+.input-section {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+
+#chordInput {
+    padding: 8px;
+    width: 200px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.result-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 15px 0;
+}
+
+.piano-roll {
+    height: 100px;
+    background: #f0f0f0;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.examples button {
+    margin-right: 10px;
+    padding: 5px 10px;
+    background: #e0e0e0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.tool-container {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.tool-sidebar {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.analysis-panel {
+    display: grid;
+    gap: 2rem;
+}
+
+.chord-section, .scale-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+input[type="text"] {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 250px;
+}
+
+button {
+    padding: 0.5rem 1rem;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#piano-container {
+    position: relative !important;
+    width: 900px !important;
+    height: 180px !important;
+    margin: 20px auto !important;
+    user-select: none !important;
+    display: block !important;
+}
+
+.piano-key {
+    position: absolute !important;
+    bottom: 0 !important;
+    border: 1px solid #333 !important;
+    border-radius: 0 0 5px 5px !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    transition: background 0.1s !important;
+    display: block !important;
+}
+
+.white-key {
+    width: 40px !important;
+    height: 180px !important;
+    background: #fff !important;
+    z-index: 1 !important;
+     position: absolute !important;
+}
+
+.black-key {
+    width: 26px !important;
+    height: 110px !important;
+    background: #222 !important;
+    z-index: 2 !important;
+    position: absolute !important;
+
+    top: 0 !important;
+    bottom: auto !important;
+}
+
+.piano-key.active {
+    background: #ffd700 !important;
+}
+
+

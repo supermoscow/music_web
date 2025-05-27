@@ -17,12 +17,14 @@ def create_app():
     # 注册蓝图
 
     # 注册路由
-    from .routes import index, hot, tool
+    from .routes import index, hot, tool, studio
     app.register_blueprint(index.bp)
     app.register_blueprint(hot.bp)
     app.register_blueprint(tool.bp)
+    app.register_blueprint(studio.studio_bp)
 
     # 配置文件上传限制
     app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
 
     return app
+

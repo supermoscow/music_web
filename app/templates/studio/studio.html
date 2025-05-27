@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="/static/css/studio/studio.css">
+<div class="studio-header" style="display:flex;align-items:center;gap:24px;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:16px;">
+        <div class="studio-settings">
+            <button id="studio-settings-btn">☰</button>
+            <div class="studio-settings-menu" id="studio-settings-menu">
+                <button id="new-project-btn">新建工程</button>
+                <button id="save-project-btn">保存工程</button>
+                <button id="open-project-btn">打开工程</button>
+            </div>
+        </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:24px;">
+        <div class="studio-timer">00:00:00</div>
+        <div class="studio-bpm">BPM: <input type="number" value="120" min="40" max="300" style="width:50px;"></div>
+        <div class="studio-meter">
+            <select id="studio-meter-select">
+                <option value="4/4">4/4</option>
+                <option value="3/4">3/4</option>
+                <option value="6/8">6/8</option>
+            </select>
+        </div>
+    </div>
+    <div class="studio-controls" style="display:flex;align-items:center;gap:8px;">
+        <button title="回到开头">⏮️</button>
+        <button title="播放">▶️</button>
+        <button title="录音">⏺️</button>
+    </div>
+</div>
+<div class="studio-main">
+    <div class="studio-track-panel">
+        <div class="studio-track-scroll">
+            <div class="track-list"></div>
+            <button id="add-track-btn" class="add-track-btn">＋ 添加轨道</button>
+            <div id="add-track-menu" style="display:none;position:absolute;left:50px;bottom:60px;background:#23272a;border:1px solid #444;border-radius:4px;z-index:10;">
+                <button data-type="audio">音频轨</button>
+                <button data-type="drum">鼓机轨</button>
+                <button data-type="piano">钢琴轨</button>
+            </div>
+        </div>
+    </div>
+    <div id="studio-resize-bar" class="studio-resize-bar"></div>
+    <div class="studio-arrangement">
+        <div class="studio-timeline-scroll">
+            <div class="studio-timeline-wrapper"></div>
+        </div>
+        <div class="studio-arr
