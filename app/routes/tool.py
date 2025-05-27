@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, current_app
 from app.services.audio_analyzer import KeyAnalyzer
 import tempfile
 import os
@@ -97,8 +97,7 @@ def inspiration():
 
 @bp.route('/api/drum_styles')
 def api_drum_styles():
-    drum_root = os.path.join(os.path.dirname(__file__), '../../static/audio/drum')
-    drum_root = os.path.abspath(drum_root)
+    drum_root = os.path.join(current_app.root_path, 'static', 'audio', 'drum')
     print('[调试] drum_root 路径:', drum_root)
     if not os.path.isdir(drum_root):
         print('[调试] drum_root 目录不存在')
@@ -110,9 +109,8 @@ def api_drum_styles():
 @bp.route('/api/drum_sounds')
 def api_drum_sounds():
     style = request.args.get('style', '')
-    drum_root = os.path.join(os.path.dirname(__file__), '../../static/audio/drum')
+    drum_root = os.path.join(current_app.root_path, 'static', 'audio', 'drum')
     style_dir = os.path.join(drum_root, style)
-    style_dir = os.path.abspath(style_dir)
     print('[调试] drum_sounds style_dir 路径:', style_dir)
     if not os.path.isdir(style_dir):
         print('[调试] style_dir 目录不存在')
