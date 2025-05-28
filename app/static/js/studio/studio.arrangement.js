@@ -249,5 +249,26 @@ window.studio.arrangement = (function(){
         resizePlayhead();
     }
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow};
+    // move track at origIndex to newIndex, preserving segments
+    function moveTrack(origIndex, newIndex) {
+        if(origIndex === newIndex) return;
+        // reorder data
+        const track = tracks.splice(origIndex, 1)[0];
+        tracks.splice(newIndex, 0, track);
+        // reorder DOM rows
+        const rows = Array.from(arrangementArea.querySelectorAll('.arrangement-track-row'));
+        const moved = rows[origIndex];
+        if(moved) {
+            moved.remove();
+            const before = rows[newIndex] && rows[newIndex] !== moved ? rows[newIndex] : null;
+            if(before) arrangementArea.insertBefore(moved, before);
+            else arrangementArea.appendChild(moved);
+        }
+        // update data-index
+        Array.from(arrangementArea.querySelectorAll('.arrangement-track-row')).forEach((row, i) => {
+            row.dataset.index = i;
+        });
+    }
+
+    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack};
 })();

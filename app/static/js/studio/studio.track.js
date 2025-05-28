@@ -88,7 +88,9 @@ window.studio.track = (function() {
                     }
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onUp);
-                    if(window.studio.arrangement) window.studio.arrangement.refreshArrangement();
+                    if(window.studio.arrangement && window.studio.arrangement.moveTrack) {
+                        window.studio.arrangement.moveTrack(origIndex, newIndex);
+                    }
                 }
                 document.addEventListener('mousemove', onMove);
                 document.addEventListener('mouseup', onUp);

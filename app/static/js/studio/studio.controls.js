@@ -91,7 +91,9 @@ window.studio.controls = (function() {
                     const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
                     const url = URL.createObjectURL(blob);
                     if(window.studio.arrangement && window.studio.arrangement.addWaveformBlock) {
-                        window.studio.arrangement.addWaveformBlock(targetTrackIdx, url, blob);
+                        // get current playhead time for segment offset
+                        const offset = window.studio.arrangement.getCurrentTime();
+                        window.studio.arrangement.addWaveformBlock(targetTrackIdx, url, blob, offset);
                     }
                     stream.getTracks().forEach(track => track.stop());
                 };
