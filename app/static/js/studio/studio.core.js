@@ -1,4 +1,4 @@
-// studio.core.js
+
 // 主入口，协调各模块初始化
 window.studio = window.studio || {};
 document.addEventListener('DOMContentLoaded', function() {

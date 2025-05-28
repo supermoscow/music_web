@@ -3,6 +3,7 @@ window.studio = window.studio || {};
 window.studio.arrangement = (function(){
     const pxPerSec = 100; // pixels per second timeline scale
     let playheadEl, arrangementArea, playheadTimer, isPlaying=false;
+    let currentPos = 0; // current playhead position in pixels
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let tracks = [];
 
@@ -23,6 +24,8 @@ window.studio.arrangement = (function(){
             arrangementArea.appendChild(row);
         });
         initPlayhead();
+        initTimeline();
+        setPosition(currentPos/pxPerSec); // restore position
     }
 
     function initPlayhead(){
@@ -34,7 +37,9 @@ window.studio.arrangement = (function(){
         playheadEl.style.left = '0';
         playheadEl.style.top = '0';
         playheadEl.style.width = '2px';
-        playheadEl.style.height = `${tracks.length * 40}px`;
+        // full height of arrangement scroll
+        const container = scroll;
+        playheadEl.style.height = container.scrollHeight + 'px';
         playheadEl.style.background = 'red';
         scroll.appendChild(playheadEl);
     }
@@ -42,13 +47,14 @@ window.studio.arrangement = (function(){
     function startPlayhead(){
         if(isPlaying) return;
         isPlaying = true;
-        let pos = 0;
+        // resume audio context if needed
+        if(audioCtx.state === 'suspended') audioCtx.resume();
         // reset played flags
         tracks.forEach(t => t.segments.forEach(s => s.played = false));
         playheadTimer = setInterval(() => {
-            pos += pxPerSec/60;
-            playheadEl.style.left = pos + 'px';
-            const time = pos / pxPerSec;
+            currentPos += pxPerSec/60;
+            playheadEl.style.left = currentPos + 'px';
+            const time = currentPos / pxPerSec;
             checkPlaySegments(time);
         }, 1000/60);
     }
@@ -60,11 +66,15 @@ window.studio.arrangement = (function(){
 
     function resetPlayhead(){
         stopPlayhead();
+        currentPos = 0;
         if(playheadEl) playheadEl.style.left = '0';
     }
 
     function resizePlayhead(){
-        if(playheadEl) playheadEl.style.height = `${tracks.length * 40}px`;
+        const scroll = document.querySelector('.studio-arrangement-scroll');
+        if(playheadEl && scroll) {
+            playheadEl.style.height = scroll.scrollHeight + 'px';
+        }
     }
 
     function checkPlaySegments(time){
@@ -179,5 +189,50 @@ window.studio.arrangement = (function(){
         });
     }
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock};
+    // set playhead to specific time position
+    function setPosition(seconds){
+        currentPos = seconds * pxPerSec;
+        if(playheadEl) playheadEl.style.left = currentPos + 'px';
+    }
+
+    // initialize timeline ticks and click-to-seek
+    function initTimeline(){
+        const wrapper = document.querySelector('.studio-timeline-wrapper');
+        const bpm = parseInt(document.querySelector('.studio-bpm input').value) || 120;
+        const meter = document.getElementById('studio-meter-select').value;
+        const beatsPerBar = parseInt(meter.split('/')[0]);
+        const secondsPerBar = (60 / bpm) * beatsPerBar;
+        const pxPerBar = secondsPerBar * pxPerSec;
+        const numBars = 32;
+        wrapper.innerHTML = '';
+        wrapper.style.width = (numBars * pxPerBar) + 'px';
+        for(let i=0; i<numBars; i++){
+            const tick = document.createElement('div');
+            tick.className = 'timeline-tick';
+            tick.style.left = (i * pxPerBar) + 'px';
+            tick.textContent = i + 1;
+            wrapper.appendChild(tick);
+        }
+        const timelineScroll = document.querySelector('.studio-timeline-scroll');
+        // click-to-seek
+        timelineScroll.addEventListener('click', e => {
+            const rect = wrapper.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            setPosition(x / pxPerSec);
+            // update timer display
+            const sec = currentPos / pxPerSec;
+            const h = String(Math.floor(sec/3600)).padStart(2,'0');
+            const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
+            const s = String(Math.floor(sec%60)).padStart(2,'0');
+            document.querySelector('.studio-timer').textContent = `${h}:${m}:${s}`;
+        });
+        // sync scrolling
+        const arrScroll = document.querySelector('.studio-arrangement-scroll');
+        timelineScroll.addEventListener('scroll', () => { arrScroll.scrollLeft = timelineScroll.scrollLeft; });
+        arrScroll.addEventListener('scroll', () => { timelineScroll.scrollLeft = arrScroll.scrollLeft; });
+    }
+
+    function getCurrentTime(){ return currentPos / pxPerSec; }
+
+    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime};
 })();

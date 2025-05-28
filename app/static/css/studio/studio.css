@@ -286,3 +286,25 @@ body {
     z-index: 10;
     pointer-events: auto;
 }
+
+/* timeline bar */
+.studio-timeline-scroll {
+    height: 30px;
+    overflow-x: auto;
+    background: #2b2d30;
+    border-bottom: 1px solid #444;
+    position: relative;
+}
+.studio-timeline-wrapper {
+    position: relative;
+    height: 100%;
+}
+.timeline-tick {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-left: 1px solid #555;
+    padding-left: 4px;
+    font-size: 12px;
+    color: #ccc;
+}

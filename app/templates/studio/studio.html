@@ -43,7 +43,55 @@
     </div>
     <div id="studio-resize-bar" class="studio-resize-bar"></div>
     <div class="studio-arrangement">
+        <div class="studio-arrangement-scroll">
+            <div class="arrangement-area"></div>
+        </div>
         <div class="studio-timeline-scroll">
             <div class="studio-timeline-wrapper"></div>
         </div>
-        <div class="studio-arr
+    </div>
+    <div class="studio-sound-library" id="studio-sound-library">
+        <div class="sound-library-header">
+            <span>音色库</span>
+            <button id="toggle-sound-library">×</button>
+        </div>
+        <div class="sound-library-content">
+            <div>钢琴</div>
+            <div>鼓机</div>
+            <div>合成器</div>
+        </div>
+    </div>
+    <button id="open-sound-library" class="open-sound-library">🎹</button>
+</div> <!-- .studio-main -->
+<div class="studio-bottom">
+    <div class="studio-bottom-tabs">
+        <button class="bottom-tab" data-tab="inspector">Track Inspector</button>
+        <button class="bottom-tab" data-tab="keyboard">Virtual Keyboard</button>
+        <button class="bottom-tab" data-tab="editor">编辑器</button>
+        <button class="bottom-tab" data-tab="mixer">混音器</button>
+        <button id="add-bottom-panel-btn">＋</button>
+    </div>
+    <div id="studio-bottom-content" class="studio-bottom-content"></div>
+</div>
+<script src="/static/js/studio/studio.utils.js"></script>
+<script src="/static/js/studio/studio.track.js"></script>
+<script src="/static/js/studio/studio.arrangement.js"></script>
+<script src="/static/js/studio/studio.controls.js"></script>
+<script src="/static/js/studio/studio.bottom.js"></script>
+<script src="/static/js/studio/studio.core.js"></script>
+<script>
+// 音色库侧边栏开关逻辑
+const soundLibrary = document.getElementById('studio-sound-library');
+const openSoundLibraryBtn = document.getElementById('open-sound-library');
+const closeSoundLibraryBtn = document.getElementById('toggle-sound-library');
+openSoundLibraryBtn.onclick = () => { soundLibrary.style.display = 'block'; openSoundLibraryBtn.style.display = 'none'; };
+closeSoundLibraryBtn.onclick = () => { soundLibrary.style.display = 'none'; openSoundLibraryBtn.style.display = 'block'; };
+soundLibrary.style.display = 'none';
+</script>
+{% endblock %}
+
+
+
+
+
+

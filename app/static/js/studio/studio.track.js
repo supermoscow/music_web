@@ -33,6 +33,8 @@ window.studio.track = (function() {
                 const track = document.createElement('div');
                 track.className = 'track-item';
                 track.setAttribute('data-type', type);
+                // initialize unarmed
+                track.dataset.armed = 'false';
                 let icon = '';
                 if(type === 'audio') icon = '🎤';
                 if(type === 'drum') icon = '🥁';
@@ -42,9 +44,28 @@ window.studio.track = (function() {
                     <button class="mute-btn">Mute</button>
                     <button class="solo-btn">Solo</button>
                 `;
+                // add record-arm dot
+                const armDot = document.createElement('span');
+                armDot.className = 'arm-dot';
+                armDot.title = '录音轨';
+                armDot.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    // unarm others
+                    document.querySelectorAll('.studio-track-scroll .track-list .track-item').forEach(t=>{
+                        t.dataset.armed = 'false';
+                    });
+                    // arm this
+                    track.dataset.armed = 'true';
+                });
+                track.appendChild(armDot);
                 trackList.appendChild(track);
                 addTrackMenu.style.display = 'none';
-                if(window.studio.arrangement) window.studio.arrangement.refreshArrangement();
+                // add only new track row, preserve existing recordings
+                if(window.studio.arrangement && window.studio.arrangement.addTrackRow) {
+                    window.studio.arrangement.addTrackRow(type);
+                } else if(window.studio.arrangement) {
+                    window.studio.arrangement.refreshArrangement();
+                }
             });
         });
         // 拖动排序
