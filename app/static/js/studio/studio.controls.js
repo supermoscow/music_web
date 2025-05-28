@@ -5,6 +5,7 @@ window.studio.controls = (function() {
     let playing = false;
     let playInterval = null;
     let sec = 0;
+    let recordOffset = 0;
     function init() {
         const timer = document.querySelector('.studio-timer');
         const playBtn = document.querySelector('.studio-controls button[title="播放"]');
@@ -67,6 +68,8 @@ window.studio.controls = (function() {
                 // trigger playback
                 playBtn.click();
             }
+            // record start offset
+            if(window.studio.arrangement) recordOffset = window.studio.arrangement.getCurrentTime();
             // select armed track for recording
             const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
             let targetTrackIdx = -1;
@@ -91,7 +94,8 @@ window.studio.controls = (function() {
                     const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
                     const url = URL.createObjectURL(blob);
                     if(window.studio.arrangement && window.studio.arrangement.addWaveformBlock) {
-                        window.studio.arrangement.addWaveformBlock(targetTrackIdx, url, blob);
+                        // get current playhead time for segment offset
+                        window.studio.arrangement.addWaveformBlock(targetTrackIdx, url, blob, recordOffset);
                     }
                     stream.getTracks().forEach(track => track.stop());
                 };

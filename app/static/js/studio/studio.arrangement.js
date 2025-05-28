@@ -94,15 +94,16 @@ window.studio.arrangement = (function(){
         });
     }
 
-    function addWaveformBlock(trackIndex, url, blob){
+    // add waveform block at optional offset (in seconds)
+    function addWaveformBlock(trackIndex, url, blob, offset = 0){
         const track = tracks[trackIndex];
-        const segment = {start: 0, duration: 0, el: null, buffer: null, played: false};
+        const segment = {start: offset, duration: 0, el: null, buffer: null, played: false};
         track.segments.push(segment);
         const row = document.querySelector(`.arrangement-track-row[data-index='${trackIndex}']`);
         const segEl = document.createElement('div');
         segEl.className = 'arr-segment waveform-block';
         segEl.style.position = 'absolute';
-        segEl.style.left = '0';
+        segEl.style.left = (offset * pxPerSec) + 'px';
         segEl.style.top = '0px';
         segEl.style.height = '40px';
         segEl.style.background = '#888';
@@ -249,5 +250,26 @@ window.studio.arrangement = (function(){
         resizePlayhead();
     }
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow};
+    // move track at origIndex to newIndex, preserving segments
+    function moveTrack(origIndex, newIndex) {
+        if(origIndex === newIndex) return;
+        // reorder data
+        const track = tracks.splice(origIndex, 1)[0];
+        tracks.splice(newIndex, 0, track);
+        // reorder DOM rows
+        const rows = Array.from(arrangementArea.querySelectorAll('.arrangement-track-row'));
+        const moved = rows[origIndex];
+        if(moved) {
+            moved.remove();
+            const before = rows[newIndex] && rows[newIndex] !== moved ? rows[newIndex] : null;
+            if(before) arrangementArea.insertBefore(moved, before);
+            else arrangementArea.appendChild(moved);
+        }
+        // update data-index
+        Array.from(arrangementArea.querySelectorAll('.arrangement-track-row')).forEach((row, i) => {
+            row.dataset.index = i;
+        });
+    }
+
+    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack};
 })();
