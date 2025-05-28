@@ -153,7 +153,8 @@ body {
 .track-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 8px;
     padding: 6px 12px;
     margin: 4px 8px;
     background: #292d30;
@@ -161,6 +162,7 @@ body {
     user-select: none;
     cursor: grab;
     transition: background 0.2s;
+    position: relative;
 }
 .track-item:active {
     background: #333;
@@ -307,4 +309,31 @@ body {
     padding-left: 4px;
     font-size: 12px;
     color: #ccc;
+}
+
+/* 录音臂小红点 */
+.arm-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #555;
+    margin-left: auto;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.track-item[data-armed="true"] .arm-dot {
+    background: red;
+}
+
+/* 按钮方形 */
+.mute-btn, .solo-btn {
+    width: 24px;
+    height: 24px;
+    background: #444;
+    border: none;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
 }

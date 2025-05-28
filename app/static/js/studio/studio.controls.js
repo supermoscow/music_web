@@ -67,15 +67,15 @@ window.studio.controls = (function() {
                 // trigger playback
                 playBtn.click();
             }
-            // select first audio track
-            const trackList = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
+            // select armed track for recording
+            const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
             let targetTrackIdx = -1;
-            trackList.forEach((track, idx) => {
-                if(track.getAttribute('data-type') === 'audio' && targetTrackIdx === -1) targetTrackIdx = idx;
+            trackItems.forEach((track, idx) => {
+                if(track.dataset.armed === 'true') targetTrackIdx = idx;
             });
             console.log('[录音] 开始录音，targetTrackIdx:', targetTrackIdx);
             if(targetTrackIdx === -1) {
-                alert('请先添加一个音频轨道');
+                alert('请先点击轨道上的录音小红点选择录音轨');
                 return;
             }
             // start recording

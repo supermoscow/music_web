@@ -41,8 +41,8 @@ window.studio.track = (function() {
                 if(type === 'piano') icon = '🎹';
                 track.innerHTML = `
                     <span>${icon} 轨道${trackCount} (${type})</span>
-                    <button class="mute-btn">Mute</button>
-                    <button class="solo-btn">Solo</button>
+                    <button class="mute-btn">M</button>
+                    <button class="solo-btn">N</button>
                 `;
                 // add record-arm dot
                 const armDot = document.createElement('span');
