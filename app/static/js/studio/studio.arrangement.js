@@ -234,5 +234,20 @@ window.studio.arrangement = (function(){
 
     function getCurrentTime(){ return currentPos / pxPerSec; }
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime};
+    // add a single new track row without clearing existing tracks
+    function addTrackRow(type) {
+        const idx = tracks.length;
+        tracks.push({type, segments: []});
+        const row = document.createElement('div');
+        row.className = 'arrangement-track-row';
+        row.dataset.index = idx;
+        row.style.position = 'relative';
+        row.style.height = '40px';
+        row.style.borderBottom = '1px solid #444';
+        arrangementArea.appendChild(row);
+        // adjust playhead height
+        resizePlayhead();
+    }
+
+    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow};
 })();
