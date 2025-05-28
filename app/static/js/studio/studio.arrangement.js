@@ -14,7 +14,8 @@ window.studio.arrangement = (function(){
         const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
         trackItems.forEach((item, idx) => {
             const type = item.dataset.type;
-            tracks.push({type, segments: []});
+            // initialize mute and solo flags
+            tracks.push({type, segments: [], muted: false, solo: false});
             const row = document.createElement('div');
             row.className = 'arrangement-track-row';
             row.dataset.index = idx;
@@ -78,7 +79,10 @@ window.studio.arrangement = (function(){
     }
 
     function checkPlaySegments(time){
+        const soloExists = tracks.some(t => t.solo);
         tracks.forEach(track => {
+            // skip tracks based on solo/mute state
+            if(soloExists ? !track.solo : track.muted) return;
             track.segments.forEach(seg => {
                 if(!seg.played && time >= seg.start && time <= seg.start + seg.duration){
                     // play audio via AudioContext buffer source
@@ -271,5 +275,14 @@ window.studio.arrangement = (function(){
         });
     }
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack};
+    // add methods to control mute/solo per track
+    function setTrackMute(index, muted) {
+        tracks[index].muted = muted;
+    }
+
+    function setTrackSolo(index, solo) {
+        tracks[index].solo = solo;
+    }
+
+    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo};
 })();

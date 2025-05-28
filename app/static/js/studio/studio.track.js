@@ -33,8 +33,10 @@ window.studio.track = (function() {
                 const track = document.createElement('div');
                 track.className = 'track-item';
                 track.setAttribute('data-type', type);
-                // initialize unarmed
+                // initialize unarmed, mute, solo
                 track.dataset.armed = 'false';
+                track.dataset.muted = 'false';
+                track.dataset.solo = 'false';
                 let icon = '';
                 if(type === 'audio') icon = '🎤';
                 if(type === 'drum') icon = '🥁';
@@ -42,7 +44,7 @@ window.studio.track = (function() {
                 track.innerHTML = `
                     <span>${icon} 轨道${trackCount} (${type})</span>
                     <button class="mute-btn">M</button>
-                    <button class="solo-btn">N</button>
+                    <button class="solo-btn">S</button>
                 `;
                 // add record-arm dot
                 const armDot = document.createElement('span');
@@ -56,6 +58,29 @@ window.studio.track = (function() {
                     });
                     // arm this
                     track.dataset.armed = 'true';
+                });
+                // add mute/solo button handlers
+                const muteBtn = track.querySelector('.mute-btn');
+                const soloBtn = track.querySelector('.solo-btn');
+                muteBtn.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    const isMuted = track.dataset.muted === 'true';
+                    track.dataset.muted = (!isMuted).toString();
+                    muteBtn.classList.toggle('active', !isMuted);
+                    const idx = Array.from(trackList.children).indexOf(track);
+                    if(window.studio.arrangement && window.studio.arrangement.setTrackMute) {
+                        window.studio.arrangement.setTrackMute(idx, !isMuted);
+                    }
+                });
+                soloBtn.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    const isSolo = track.dataset.solo === 'true';
+                    track.dataset.solo = (!isSolo).toString();
+                    soloBtn.classList.toggle('active', !isSolo);
+                    const idx = Array.from(trackList.children).indexOf(track);
+                    if(window.studio.arrangement && window.studio.arrangement.setTrackSolo) {
+                        window.studio.arrangement.setTrackSolo(idx, !isSolo);
+                    }
                 });
                 track.appendChild(armDot);
                 trackList.appendChild(track);

@@ -337,3 +337,28 @@ body {
     cursor: pointer;
     flex-shrink: 0;
 }
+
+/* Mute/Solo 按钮高亮状态 */
+.track-item .mute-btn,
+.track-item .solo-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.track-item .mute-btn:hover,
+.track-item .solo-btn:hover {
+    background: #444;
+}
+.track-item .mute-btn.active {
+    background: #e74c3c;
+    color: #fff;
+}
+.track-item .solo-btn.active {
+    background: #3498db;
+    color: #fff;
+}
+
