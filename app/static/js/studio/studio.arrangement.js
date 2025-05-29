@@ -19,7 +19,7 @@ window.studio.arrangement = (function(){
         }
         trackItems.forEach((item, idx) => {
             const type = item.dataset.type;
-            tracks.push({type, segments: [], muted: false, solo: false});
+            tracks.push({type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false});
             const row = document.createElement('div');
             row.className = 'arrangement-track-row';
             row.dataset.index = idx;
@@ -102,7 +102,13 @@ window.studio.arrangement = (function(){
                         // adjust playback rate per current BPM
                         const bpm = parseInt(document.querySelector('.studio-bpm input').value) || defaultBPM;
                         src.playbackRate.value = bpm / defaultBPM;
-                        src.connect(audioCtx.destination);
+                        // create gain and panner nodes for volume and pan
+                        const gainNode = audioCtx.createGain();
+                        gainNode.gain.value = track.volume;
+                        const panner = audioCtx.createStereoPanner();
+                        panner.pan.value = (track.pan || 0) / 50;
+                        // connect nodes: src -> gain -> panner -> destination
+                        src.connect(gainNode).connect(panner).connect(audioCtx.destination);
                         src.start(0, time - seg.start);
                         activeSources.push(src);
                     }
@@ -253,7 +259,7 @@ window.studio.arrangement = (function(){
     // add a single new track row without clearing existing tracks
     function addTrackRow(type) {
         const idx = tracks.length;
-        tracks.push({type, segments: [], muted: false, solo: false});
+        tracks.push({type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false});
         const row = document.createElement('div');
         row.className = 'arrangement-track-row';
         row.dataset.index = idx;
@@ -293,5 +299,36 @@ window.studio.arrangement = (function(){
         tracks[index].solo = solo;
     }
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo};
+    // set track volume (0.0 to 1.0)
+    function setTrackVolume(index, volume) {
+        tracks[index].volume = volume;
+    }
+
+    // set track pan (-50 to +50)
+    function setTrackPan(index, pan) {
+        tracks[index].pan = pan;
+    }
+
+    // arm/unarm track for recording
+    function armTrack(index, armed) {
+        tracks[index].armed = armed;
+        // reflect in track panel
+        const items = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
+        const item = items[index];
+        if (item) item.dataset.armed = armed.toString();
+    }
+
+    // get track settings for inspector
+    function getTrackSettings(index) {
+        const t = tracks[index] || {};
+        return {
+            volume: t.volume != null ? t.volume : 1,
+            pan: t.pan != null ? t.pan : 0,
+            muted: t.muted,
+            solo: t.solo,
+            armed: t.armed
+        };
+    }
+
+    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo, setTrackVolume, setTrackPan, armTrack, getTrackSettings};
 })();

@@ -128,6 +128,22 @@ window.studio.track = (function() {
         if(trackScroll && arrangeScroll) {
             syncScroll(trackScroll, arrangeScroll);
         }
+
+        // track selection delegation
+        trackList.addEventListener('click', function(ev) {
+            const trackEl = ev.target.closest('.track-item');
+            if (trackEl) {
+                // deselect others
+                document.querySelectorAll('.studio-track-scroll .track-list .track-item').forEach(t => {
+                    t.classList.remove('selected');
+                });
+                // select this
+                trackEl.classList.add('selected');
+                const index = Array.from(trackList.children).indexOf(trackEl);
+                const type = trackEl.getAttribute('data-type');
+                window.dispatchEvent(new CustomEvent('trackSelected', { detail: { index, type } }));
+            }
+        });
     }
     return { init };
 })();
