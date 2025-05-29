@@ -19,7 +19,12 @@ window.studio.arrangement = (function(){
         }
         trackItems.forEach((item, idx) => {
             const type = item.dataset.type;
-            tracks.push({type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false});
+            const trackObj = {type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false};
+            // create audio chain nodes for this track
+            trackObj.gainNode = audioCtx.createGain();
+            trackObj.panner = audioCtx.createStereoPanner();
+            trackObj.gainNode.connect(trackObj.panner).connect(audioCtx.destination);
+            tracks.push(trackObj);
             const row = document.createElement('div');
             row.className = 'arrangement-track-row';
             row.dataset.index = idx;
@@ -102,13 +107,8 @@ window.studio.arrangement = (function(){
                         // adjust playback rate per current BPM
                         const bpm = parseInt(document.querySelector('.studio-bpm input').value) || defaultBPM;
                         src.playbackRate.value = bpm / defaultBPM;
-                        // create gain and panner nodes for volume and pan
-                        const gainNode = audioCtx.createGain();
-                        gainNode.gain.value = track.volume;
-                        const panner = audioCtx.createStereoPanner();
-                        panner.pan.value = (track.pan || 0) / 50;
-                        // connect nodes: src -> gain -> panner -> destination
-                        src.connect(gainNode).connect(panner).connect(audioCtx.destination);
+                        // connect source through persistent track nodes
+                        src.connect(track.gainNode);
                         src.start(0, time - seg.start);
                         activeSources.push(src);
                     }
@@ -259,7 +259,11 @@ window.studio.arrangement = (function(){
     // add a single new track row without clearing existing tracks
     function addTrackRow(type) {
         const idx = tracks.length;
-        tracks.push({type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false});
+        const trackObj = {type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false};
+        trackObj.gainNode = audioCtx.createGain();
+        trackObj.panner = audioCtx.createStereoPanner();
+        trackObj.gainNode.connect(trackObj.panner).connect(audioCtx.destination);
+        tracks.push(trackObj);
         const row = document.createElement('div');
         row.className = 'arrangement-track-row';
         row.dataset.index = idx;
@@ -293,20 +297,27 @@ window.studio.arrangement = (function(){
     // add methods to control mute/solo per track
     function setTrackMute(index, muted) {
         tracks[index].muted = muted;
+        updateGainStates();
     }
 
     function setTrackSolo(index, solo) {
         tracks[index].solo = solo;
+        updateGainStates();
     }
 
     // set track volume (0.0 to 1.0)
     function setTrackVolume(index, volume) {
-        tracks[index].volume = volume;
+        const t = tracks[index];
+        t.volume = volume;
+        // if not muted or soloed, update gain immediately
+        updateGainStates();
     }
 
     // set track pan (-50 to +50)
     function setTrackPan(index, pan) {
-        tracks[index].pan = pan;
+        const t = tracks[index];
+        t.pan = pan;
+        t.panner.pan.value = pan / 50;
     }
 
     // arm/unarm track for recording
@@ -330,5 +341,16 @@ window.studio.arrangement = (function(){
         };
     }
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo, setTrackVolume, setTrackPan, armTrack, getTrackSettings};
+    // update gain nodes based on mute/solo/volume
+    function updateGainStates() {
+        const soloExists = tracks.some(t=>t.solo);
+        tracks.forEach(t=>{
+            let gainVal = t.volume;
+            if(soloExists) gainVal = t.solo ? t.volume : 0;
+            else if(t.muted) gainVal = 0;
+            t.gainNode.gain.value = gainVal;
+        });
+    }
+
+    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo, setTrackVolume, setTrackPan, armTrack, getTrackSettings, updateGainStates};
 })();
