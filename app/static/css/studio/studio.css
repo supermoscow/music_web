@@ -80,7 +80,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    padding: 8px 0;
 }
 .studio-arrangement-scroll {
     flex: 1;
@@ -188,8 +187,8 @@ body {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 8px 0;
+    gap: 0;
+    padding: 0;
     /* static grid: fallback values for beat (50px) and bar (200px) */
     --beat-width: 50px;
     --bar-width: 200px;
@@ -206,14 +205,26 @@ body {
 }
 .arrangement-track-row {
     height: var(--track-row-height);
-    border-bottom: 1px solid #333;
     display: flex;
     align-items: center;
     position: relative;
-    background-color: #202225;
-    /* grid drawn by parent .arrangement-area, remove per-row grid */
-    background-image: none;
-    background-size: auto;
+    background-color: #222;
+    /* grid: beat every --beat-width, bar every --bar-width */
+    background-image:
+        repeating-linear-gradient(to right,
+            transparent 0,
+            transparent calc(var(--beat-width) - 1px),
+            rgba(255,255,255,0.1) calc(var(--beat-width) - 1px),
+            rgba(255,255,255,0.1) var(--beat-width)
+        ),
+        repeating-linear-gradient(to right,
+            transparent 0,
+            transparent calc(var(--bar-width) - 1px),
+            rgba(255,255,255,0.2) calc(var(--bar-width) - 1px),
+            rgba(255,255,255,0.2) var(--bar-width)
+        );
+    background-repeat: repeat-x;
+    border-bottom: 1px solid #333;
 }
 .arrangement-grid {
     flex: 1;
