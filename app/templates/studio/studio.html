@@ -66,15 +66,17 @@
     <button id="open-sound-library" class="open-sound-library">🎹</button>
 </div> <!-- .studio-main -->
 <div class="studio-bottom">
-    <div class="studio-bottom-tabs">
-        <button class="bottom-tab" data-tab="inspector">Track Inspector</button>
-        <button class="bottom-tab" data-tab="keyboard">Virtual Keyboard</button>
-        <button class="bottom-tab" data-tab="editor">编辑器</button>
-        <button class="bottom-tab" data-tab="mixer">混音器</button>
-        <button id="add-bottom-panel-btn">＋</button>
+    <div class="studio-bottom-info"></div>
+    <div class="studio-bottom-body">
+        <div id="studio-bottom-content" class="studio-bottom-content"></div>
+        <div class="studio-bottom-tabs">
+            <button class="bottom-tab" data-tab="inspector">🔍</button>
+            <button class="bottom-tab" data-tab="keyboard">🎹</button>
+            <button class="bottom-tab" data-tab="editor">✏️</button>
+            <button class="bottom-tab" data-tab="mixer">🎚️</button>
+        </div>
     </div>
-    <div id="studio-bottom-content" class="studio-bottom-content"></div>
-</div>
+</div> <!-- .studio-bottom -->
 <script src="/static/js/studio/studio.utils.js"></script>
 <script src="/static/js/studio/studio.track.js"></script>
 <script src="/static/js/studio/studio.arrangement.js"></script>
