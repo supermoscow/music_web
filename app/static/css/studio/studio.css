@@ -1,4 +1,9 @@
 /* studio.css 基础布局和样式 */
+:root {
+    --track-row-height: 100px; /* uniform height for track rows */
+}
+/* include border and padding in height calculations */
+*, *::before, *::after { box-sizing: border-box; }
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -155,8 +160,9 @@ body {
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    padding: 6px 12px;
-    margin: 4px 8px;
+    height: var(--track-row-height);
+    padding: 0 12px;
+    margin: 0 8px;
     background: #292d30;
     border-radius: 4px;
     user-select: none;
@@ -199,13 +205,15 @@ body {
     background-size: var(--beat-width, 50px) 100%, var(--bar-width, 200px) 100%;
 }
 .arrangement-track-row {
-    flex: none;
-    height: 100px;
+    height: var(--track-row-height);
     border-bottom: 1px solid #333;
     display: flex;
     align-items: center;
     position: relative;
-    background: #202225;
+    background-color: #202225;
+    /* grid drawn by parent .arrangement-area, remove per-row grid */
+    background-image: none;
+    background-size: auto;
 }
 .arrangement-grid {
     flex: 1;
@@ -228,6 +236,12 @@ body {
     pointer-events: none;
     transition: left 0.05s linear;
 }
+/* style for arrangement segments */
+.arr-segment { position: absolute; top: 0; height: 100%; }
+/* waveform blocks styling */
+.waveform-block { background: #888; cursor: pointer; }
+/* canvas inside segments */
+.arr-segment canvas { position: absolute; top: 0; left: 0; height: 100%; }
 .studio-sound-library {
     width: 120px;
     background: #23272a;
@@ -379,3 +393,10 @@ body {
     color: #fff;
 }
 
+/* track panel timeline placeholder */
+.track-panel-timeline-placeholder {
+    height: 22px; /* match .studio-timeline-scroll height */
+    background: transparent;
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}

@@ -13,6 +13,10 @@ window.studio.arrangement = (function(){
         arrangementArea.innerHTML = '';
         tracks = [];
         const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
+        if(trackItems.length) {
+            const headerHeight = trackItems[0].getBoundingClientRect().height;
+            document.documentElement.style.setProperty('--track-row-height', headerHeight + 'px');
+        }
         trackItems.forEach((item, idx) => {
             const type = item.dataset.type;
             tracks.push({type, segments: [], muted: false, solo: false});
@@ -20,12 +24,13 @@ window.studio.arrangement = (function(){
             row.className = 'arrangement-track-row';
             row.dataset.index = idx;
             row.style.position = 'relative';
-            // match height to track header
-            const headerEl = trackItems[idx];
-            row.style.height = '80px';
-            row.style.borderBottom = '1px solid #444';
             arrangementArea.appendChild(row);
         });
+        // sync vertical scroll between track panel and arrangement
+        const trackScroll = document.querySelector('.studio-track-scroll');
+        const arrangeScroll = document.querySelector('.studio-arrangement-scroll');
+        trackScroll.addEventListener('scroll', () => { arrangeScroll.scrollTop = trackScroll.scrollTop; });
+        arrangeScroll.addEventListener('scroll', () => { trackScroll.scrollTop = arrangeScroll.scrollTop; });
         initPlayhead();
         initTimeline();
         setPosition(currentPos/pxPerSec); // restore position
@@ -114,19 +119,9 @@ window.studio.arrangement = (function(){
         const row = document.querySelector(`.arrangement-track-row[data-index='${trackIndex}']`);
         const segEl = document.createElement('div');
         segEl.className = 'arr-segment waveform-block';
-        segEl.style.position = 'absolute';
         segEl.style.left = (offset * pxPerSec) + 'px';
-        segEl.style.top = '0px';
-        segEl.style.height = '80px';
-        segEl.style.background = '#888';
-        segEl.style.cursor = 'pointer';
         // create canvas for waveform
         const canvas = document.createElement('canvas');
-        canvas.style.position = 'absolute';
-        canvas.style.left = '0';
-        canvas.style.top = '0px';
-        canvas.style.height = '80px';
-        canvas.style.cursor = 'pointer';
         segEl.appendChild(canvas);
         // decode blob and draw waveform
         blob.arrayBuffer().then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer)).then(buffer => {
@@ -138,20 +133,18 @@ window.studio.arrangement = (function(){
             segment.duration = duration;
             // set sizes based on duration
             const width = duration * pxPerSec;
-            const height = 80;
             canvas.width = width;
-            canvas.height = height;
-            canvas.style.width = width + 'px';
+            canvas.height = segment.el ? segment.el.getBoundingClientRect().height : canvas.height;
             segEl.style.width = width + 'px';
             const ctx = canvas.getContext('2d');
             // draw background
             ctx.fillStyle = '#444';
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillRect(0, 0, width, canvas.height);
             // draw waveform
             ctx.lineWidth = 1;
             ctx.strokeStyle = '#fff';
             const step = Math.ceil(raw.length / width);
-            const amp = height / 2;
+            const amp = canvas.height / 2;
             for(let x=0; x<width; x++){
                 let min = 1.0, max = -1.0;
                 for(let i=0; i<step; i++){
@@ -162,8 +155,8 @@ window.studio.arrangement = (function(){
                 const yLow = (1 + min) * amp;
                 const yHigh = (1 + max) * amp;
                 ctx.beginPath();
-                ctx.moveTo(x, height - yLow);
-                ctx.lineTo(x, height - yHigh);
+                ctx.moveTo(x, canvas.height - yLow);
+                ctx.lineTo(x, canvas.height - yHigh);
                 ctx.stroke();
             }
         });
@@ -264,10 +257,6 @@ window.studio.arrangement = (function(){
         row.className = 'arrangement-track-row';
         row.dataset.index = idx;
         row.style.position = 'relative';
-        // align new row height to corresponding track header
-        const headerEl = document.querySelectorAll('.studio-track-scroll .track-list .track-item')[idx];
-        row.style.height = (headerEl ? headerEl.offsetHeight : 40) + 'px';
-        row.style.borderBottom = '1px solid #444';
         arrangementArea.appendChild(row);
         // adjust playhead height
         resizePlayhead();
