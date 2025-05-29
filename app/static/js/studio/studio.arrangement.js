@@ -1,11 +1,12 @@
-// filepath: app/static/js/studio/studio.arrangement.js
 window.studio = window.studio || {};
 window.studio.arrangement = (function(){
-    const pxPerSec = 100; // pixels per second timeline scale
+    const pxPerSec = 100; // base pixels per second
+    const defaultBPM = 120; // grid tempo for static grid
     let playheadEl, arrangementArea, playheadTimer, isPlaying=false;
     let currentPos = 0; // current playhead position in pixels
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let tracks = [];
+    let activeSources = []; // track playing AudioBufferSourceNodes for stop control
 
     function refreshArrangement(){
         arrangementArea = document.querySelector('.arrangement-area');
@@ -14,13 +15,14 @@ window.studio.arrangement = (function(){
         const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
         trackItems.forEach((item, idx) => {
             const type = item.dataset.type;
-            // initialize mute and solo flags
             tracks.push({type, segments: [], muted: false, solo: false});
             const row = document.createElement('div');
             row.className = 'arrangement-track-row';
             row.dataset.index = idx;
             row.style.position = 'relative';
-            row.style.height = '40px';
+            // match height to track header
+            const headerEl = trackItems[idx];
+            row.style.height = '80px';
             row.style.borderBottom = '1px solid #444';
             arrangementArea.appendChild(row);
         });
@@ -39,29 +41,32 @@ window.studio.arrangement = (function(){
         playheadEl.style.top = '0';
         playheadEl.style.width = '2px';
         // full height of arrangement scroll
-        const container = scroll;
-        playheadEl.style.height = container.scrollHeight + 'px';
+        playheadEl.style.height = scroll.scrollHeight + 'px';
         playheadEl.style.background = 'red';
         scroll.appendChild(playheadEl);
     }
 
     function startPlayhead(){
         if(isPlaying) return;
+        activeSources = []; // clear previous sources
         isPlaying = true;
-        // resume audio context if needed
         if(audioCtx.state === 'suspended') audioCtx.resume();
-        // reset played flags
         tracks.forEach(t => t.segments.forEach(s => s.played = false));
         playheadTimer = setInterval(() => {
-            currentPos += pxPerSec/60;
+            // adjust speed based on BPM input
+            const bpm = parseInt(document.querySelector('.studio-bpm input').value) || defaultBPM;
+            const factor = bpm / defaultBPM;
+            currentPos += (pxPerSec * factor) / 60;
             playheadEl.style.left = currentPos + 'px';
-            const time = currentPos / pxPerSec;
-            checkPlaySegments(time);
+            checkPlaySegments(currentPos / pxPerSec);
         }, 1000/60);
     }
 
     function stopPlayhead(){
         clearInterval(playheadTimer);
+        // stop all currently playing audio sources immediately
+        activeSources.forEach(src => { try { src.stop(0); } catch(e) {} });
+        activeSources = [];
         isPlaying = false;
     }
 
@@ -85,12 +90,15 @@ window.studio.arrangement = (function(){
             if(soloExists ? !track.solo : track.muted) return;
             track.segments.forEach(seg => {
                 if(!seg.played && time >= seg.start && time <= seg.start + seg.duration){
-                    // play audio via AudioContext buffer source
                     if(seg.buffer){
                         const src = audioCtx.createBufferSource();
                         src.buffer = seg.buffer;
+                        // adjust playback rate per current BPM
+                        const bpm = parseInt(document.querySelector('.studio-bpm input').value) || defaultBPM;
+                        src.playbackRate.value = bpm / defaultBPM;
                         src.connect(audioCtx.destination);
                         src.start(0, time - seg.start);
+                        activeSources.push(src);
                     }
                     seg.played = true;
                 }
@@ -109,7 +117,7 @@ window.studio.arrangement = (function(){
         segEl.style.position = 'absolute';
         segEl.style.left = (offset * pxPerSec) + 'px';
         segEl.style.top = '0px';
-        segEl.style.height = '40px';
+        segEl.style.height = '80px';
         segEl.style.background = '#888';
         segEl.style.cursor = 'pointer';
         // create canvas for waveform
@@ -117,7 +125,7 @@ window.studio.arrangement = (function(){
         canvas.style.position = 'absolute';
         canvas.style.left = '0';
         canvas.style.top = '0px';
-        canvas.style.height = '40px';
+        canvas.style.height = '80px';
         canvas.style.cursor = 'pointer';
         segEl.appendChild(canvas);
         // decode blob and draw waveform
@@ -130,7 +138,7 @@ window.studio.arrangement = (function(){
             segment.duration = duration;
             // set sizes based on duration
             const width = duration * pxPerSec;
-            const height = 40;
+            const height = 80;
             canvas.width = width;
             canvas.height = height;
             canvas.style.width = width + 'px';
@@ -203,14 +211,23 @@ window.studio.arrangement = (function(){
     // initialize timeline ticks and click-to-seek
     function initTimeline(){
         const wrapper = document.querySelector('.studio-timeline-wrapper');
-        const bpm = parseInt(document.querySelector('.studio-bpm input').value) || 120;
+        // grid uses default BPM
+        const bpm = defaultBPM;
         const meter = document.getElementById('studio-meter-select').value;
         const beatsPerBar = parseInt(meter.split('/')[0]);
         const secondsPerBar = (60 / bpm) * beatsPerBar;
         const pxPerBar = secondsPerBar * pxPerSec;
         const numBars = 32;
+        const totalWidth = numBars * pxPerBar;
+        // set wrapper and arrangement-area widths
         wrapper.innerHTML = '';
-        wrapper.style.width = (numBars * pxPerBar) + 'px';
+        wrapper.style.width = totalWidth + 'px';
+        const area = document.querySelector('.arrangement-area');
+        if(area) {
+            area.style.width = totalWidth + 'px';
+            area.style.setProperty('--beat-width', (pxPerBar / beatsPerBar) + 'px');
+            area.style.setProperty('--bar-width', pxPerBar + 'px');
+        }
         for(let i=0; i<numBars; i++){
             const tick = document.createElement('div');
             tick.className = 'timeline-tick';
@@ -242,12 +259,14 @@ window.studio.arrangement = (function(){
     // add a single new track row without clearing existing tracks
     function addTrackRow(type) {
         const idx = tracks.length;
-        tracks.push({type, segments: []});
+        tracks.push({type, segments: [], muted: false, solo: false});
         const row = document.createElement('div');
         row.className = 'arrangement-track-row';
         row.dataset.index = idx;
         row.style.position = 'relative';
-        row.style.height = '40px';
+        // align new row height to corresponding track header
+        const headerEl = document.querySelectorAll('.studio-track-scroll .track-list .track-item')[idx];
+        row.style.height = (headerEl ? headerEl.offsetHeight : 40) + 'px';
         row.style.borderBottom = '1px solid #444';
         arrangementArea.appendChild(row);
         // adjust playhead height

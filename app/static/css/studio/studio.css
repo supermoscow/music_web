@@ -184,10 +184,23 @@ body {
     flex-direction: column;
     gap: 4px;
     padding: 8px 0;
+    /* static grid: fallback values for beat (50px) and bar (200px) */
+    --beat-width: 50px;
+    --bar-width: 200px;
+    background-image:
+        repeating-linear-gradient(to right,
+            transparent 0, transparent var(--beat-width),
+            rgba(255,255,255,0.1) var(--beat-width), rgba(255,255,255,0.1) calc(var(--beat-width) + 1px)
+        ),
+        repeating-linear-gradient(to right,
+            transparent 0, transparent var(--bar-width),
+            rgba(255,255,255,0.2) var(--bar-width), rgba(255,255,255,0.2) calc(var(--bar-width) + 1px)
+        );
+    background-size: var(--beat-width, 50px) 100%, var(--bar-width, 200px) 100%;
 }
 .arrangement-track-row {
     flex: none;
-    height: 40px;
+    height: 100px;
     border-bottom: 1px solid #333;
     display: flex;
     align-items: center;
@@ -281,9 +294,7 @@ body {
     cursor: pointer;
 }
 
-.arrangement-track-row {
-    position: relative;
-}
+
 .waveform-block {
     z-index: 10;
     pointer-events: auto;
@@ -296,6 +307,12 @@ body {
     background: #2b2d30;
     border-bottom: 1px solid #444;
     position: relative;
+    /* hide native scrollbar but keep scrollable */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.studio-timeline-scroll::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
 }
 .studio-timeline-wrapper {
     position: relative;

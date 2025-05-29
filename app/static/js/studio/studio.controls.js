@@ -57,7 +57,7 @@ window.studio.controls = (function() {
         recordBtn.addEventListener('click', async function() {
             // if recording ongoing, stop recording and continue playback
             if(window.studio.controls.isRecording) {
-                console.log('[录音] 停止录音，继续播放');
+                console.log('[录���] 停止录音，继续播放');
                 window.studio.controls.isRecording = false;
                 recordBtn.textContent = '⏺️';
                 if(window.studio.controls.mediaRecorder) window.studio.controls.mediaRecorder.stop();
