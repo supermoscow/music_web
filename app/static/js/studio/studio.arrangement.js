@@ -48,6 +48,7 @@ window.studio.arrangement = (function(){
         // full height of arrangement scroll
         playheadEl.style.height = scroll.scrollHeight + 'px';
         playheadEl.style.background = 'red';
+        playheadEl.style.zIndex = '9999';
         scroll.appendChild(playheadEl);
     }
 
