@@ -62,6 +62,8 @@ window.studio.controls = (function() {
                     timer.textContent = `${h}:${m}:${s}`;
                 }, 1000);
                 if(window.studio.arrangement) window.studio.arrangement.startPlayhead();
+                // 重置节拍器状态
+                if(window.metronomeOn && typeof window.resetMetronome === 'function') window.resetMetronome();
             } else {
                 clearInterval(playInterval);
                 if(window.studio.arrangement) window.studio.arrangement.stopPlayhead();
@@ -73,6 +75,8 @@ window.studio.controls = (function() {
             playing = false;
             playBtn.textContent = '▶️';
             if(window.studio.arrangement) window.studio.arrangement.resetPlayhead();
+            // 重置节拍器状态
+            if(typeof window.resetMetronome === 'function') window.resetMetronome();
         });
         recordBtn.addEventListener('click', function() {
             // if recording ongoing, stop recording and continue playback

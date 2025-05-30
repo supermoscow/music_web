@@ -12,6 +12,16 @@
             </div>
         </div>
     </div>
+    <div class="studio-modes" style="display:flex;align-items:center;gap:8px;">
+        <button id="select-mode-btn">选择</button>
+        <button id="delete-mode-btn">删除</button>
+        <button id="paint-mode-btn">🎨</button>
+    </div>
+    <div class="studio-controls" style="display:flex;align-items:center;gap:8px;">
+        <button title="回到开头">⏮️</button>
+        <button title="播放">▶️</button>
+        <button title="录音">⏺️</button>
+    </div>
     <div style="display:flex;align-items:center;gap:24px;">
         <div class="studio-timer">00:00:00</div>
         <div class="studio-bpm">BPM: <input type="number" value="120" min="40" max="300" style="width:50px;"></div>
@@ -22,11 +32,13 @@
                 <option value="6/8">6/8</option>
             </select>
         </div>
+        <button id="metronome-btn" title="节拍器">⏱️</button>
     </div>
-    <div class="studio-controls" style="display:flex;align-items:center;gap:8px;">
-        <button title="回到开头">⏮️</button>
-        <button title="播放">▶️</button>
-        <button title="录音">⏺️</button>
+
+
+    <div class="studio-master-volume">
+        <label for="studio-master-volume">音量</label>
+        <input type="range" id="studio-master-volume" min="0" max="100" value="80">
     </div>
 </div>
 <div class="studio-main">
@@ -82,7 +94,6 @@
 <script src="/static/js/studio/studio.arrangement.js"></script>
 <script src="/static/js/studio/studio.controls.js"></script>
 <script src="/static/js/studio/studio.bottom.js"></script>
-<script src="/static/js/studio/studio.core.js"></script>
 <script>
 // 音色库侧边栏开关逻辑
 const soundLibrary = document.getElementById('studio-sound-library');
@@ -91,6 +102,42 @@ const closeSoundLibraryBtn = document.getElementById('toggle-sound-library');
 openSoundLibraryBtn.onclick = () => { soundLibrary.style.display = 'block'; openSoundLibraryBtn.style.display = 'none'; };
 closeSoundLibraryBtn.onclick = () => { soundLibrary.style.display = 'none'; openSoundLibraryBtn.style.display = 'block'; };
 soundLibrary.style.display = 'none';
+
+// 模式切换与光标变化逻辑
+const selectModeBtn = document.getElementById('select-mode-btn');
+const deleteModeBtn = document.getElementById('delete-mode-btn');
+const paintModeBtn = document.getElementById('paint-mode-btn');
+selectModeBtn.addEventListener('click', () => {
+    document.body.style.cursor = 'default';
+    document.body.classList.add('select-mode');
+    document.body.classList.remove('delete-mode', 'paint-mode');
+    selectModeBtn.classList.add('active');
+    deleteModeBtn.classList.remove('active');
+    paintModeBtn.classList.remove('active');
+});
+deleteModeBtn.addEventListener('click', () => {
+    document.body.style.cursor = 'crosshair';
+    document.body.classList.add('delete-mode');
+    document.body.classList.remove('select-mode', 'paint-mode');
+    deleteModeBtn.classList.add('active');
+    selectModeBtn.classList.remove('active');
+    paintModeBtn.classList.remove('active');
+});
+paintModeBtn.addEventListener('click', () => {
+    document.body.style.cursor = 'crosshair';
+    document.body.classList.add('paint-mode');
+    document.body.classList.remove('select-mode', 'delete-mode');
+    paintModeBtn.classList.add('active');
+    selectModeBtn.classList.remove('active');
+    deleteModeBtn.classList.remove('active');
+});
+
+// 初始化为选择模式
+document.body.classList.add('select-mode');
+selectModeBtn.classList.add('active');
+document.body.style.cursor = 'default';
 </script>
+<script src="/static/js/studio/studio.metronome.js"></script>
+<script src="/static/js/studio/studio.core.js"></script>
 {% endblock %}
 

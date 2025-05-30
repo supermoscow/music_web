@@ -257,6 +257,10 @@ body {
 .waveform-block { background: #888; cursor: pointer; }
 /* canvas inside segments */
 .arr-segment canvas { position: absolute; top: 0; left: 0; height: 100%; }
+.arr-segment.drum-block {
+    background: rgba(0, 128, 0, 0.3);
+    border: 1px solid #080;
+}
 .studio-sound-library {
     width: 120px;
     background: #23272a;
@@ -351,6 +355,17 @@ body {
     pointer-events: auto;
 }
 
+/* waveform-block interaction states */
+body.select-mode .waveform-block:hover {
+    outline: 2px solid #7289da;
+}
+body.delete-mode .waveform-block:hover {
+    outline: 2px solid #e74c3c;
+}
+.waveform-block.selected {
+    outline: 2px solid #7289da;
+}
+
 /* timeline bar */
 .studio-timeline-scroll {
     height: 30px;
@@ -436,4 +451,22 @@ body {
     background: transparent;
     border-bottom: 1px solid #444;
     flex-shrink: 0;
+}
+
+/* 模式按钮样式 */
+.studio-modes button {
+    background: #444;
+    border: none;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.studio-modes button:hover {
+    background: #555;
+}
+.studio-modes button.active {
+    background: #7289da;
+    color: #fff;
 }
