@@ -65,14 +65,147 @@ function renderDrumMachineEditor(currentSegment) {
                 cell.dataset.file = sound.file;
                 cell.addEventListener('click', () => {
                     cell.classList.toggle('active');
-                    const audio = new Audio(sound.file);
-                    audio.play();
                 });
                 rowGrid.appendChild(cell);
             }
             rowEl.appendChild(rowGrid);
             grid.appendChild(rowEl);
         });
+
+        // 鼓机播放控制UI
+        const controls = document.createElement('div');
+        controls.className = 'drum-controls';
+        controls.innerHTML = `
+          <button id="drum-play-btn">▶️ 播放</button>
+          <button id="drum-pause-btn" disabled>⏸ 暂停</button>
+          <progress id="drum-play-progress" value="0" max="100" style="width:120px;vertical-align:middle;"></progress>
+        `;
+        bottomContent.prepend(controls);
+
+        // 获取BPM（直接从主控栏bpm输入框获取）
+        function getCurrentBPM() {
+          const bpmInput = document.querySelector('.studio-bpm input[type="number"]');
+          if (bpmInput) return parseFloat(bpmInput.value) || 120;
+          return 120;
+        }
+
+        // Web Audio API: 预加载鼓样本
+        const audioCtx = window._drumAudioCtx || (window._drumAudioCtx = new (window.AudioContext || window.webkitAudioContext)());
+        const drumBuffers = {};
+        async function loadBuffer(url) {
+          if (drumBuffers[url]) return drumBuffers[url];
+          const response = await fetch(url);
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          drumBuffers[url] = audioBuffer;
+          return audioBuffer;
+        }
+        // 预加载所有鼓样本
+        Promise.all(sounds.map(s => loadBuffer(s.file)));
+
+        // 鼓机播放逻辑（Web Audio精准调度）
+        let drumPlayRAF = null;
+        let drumPlayStep = 0;
+        let isPlaying = false;
+        let playStartTime = 0;
+        let scheduledStep = 0;
+        let scheduledSources = [];
+        const playBtn = controls.querySelector('#drum-play-btn');
+        const pauseBtn = controls.querySelector('#drum-pause-btn');
+        const progressBar = controls.querySelector('#drum-play-progress');
+        const allRows = Array.from(grid.querySelectorAll('.drum-row'));
+        function highlightStep(step) {
+          allRows.forEach(row => {
+            const cells = row.querySelectorAll('.drum-cell');
+            cells.forEach((cell, idx) => {
+              if(idx === step) {
+                cell.classList.add('playing');
+                cell.style.backgroundColor = '#ffe066';
+              } else {
+                cell.classList.remove('playing');
+                cell.style.backgroundColor = '';
+              }
+            });
+          });
+        }
+        function updateProgress(step) {
+          progressBar.value = Math.round((step / subdivisionsCount) * 100);
+        }
+        async function scheduleDrumNotes(bpm, startTime, fromStep, toStep) {
+          const interval = 60 / bpm / subdivisions;
+          for (let step = fromStep; step < toStep; step++) {
+            const playTime = startTime + (step * interval);
+            allRows.forEach(row => {
+              const cells = row.querySelectorAll('.drum-cell');
+              const cell = cells[step % subdivisionsCount];
+              if(cell && cell.classList.contains('active')) {
+                const file = cell.dataset.file;
+                loadBuffer(file).then(buffer => {
+                  // 检查是否已为该step调度过（防止重复）
+                  if (!cell._lastScheduledStep || cell._lastScheduledStep !== step) {
+                    cell._lastScheduledStep = step;
+                    const src = audioCtx.createBufferSource();
+                    src.buffer = buffer;
+                    src.connect(audioCtx.destination);
+                    src.start(playTime);
+                    scheduledSources.push(src);
+                  }
+                });
+              }
+            });
+          }
+        }
+        function playDrumMachine() {
+          if(isPlaying) return;
+          isPlaying = true;
+          playBtn.disabled = true;
+          pauseBtn.disabled = false;
+          drumPlayStep = 0;
+          scheduledStep = 0;
+          playStartTime = audioCtx.currentTime + 0.05; // 稍微延迟，避免首音丢失
+          const bpm = getCurrentBPM();
+          const interval = 60 / bpm / subdivisions;
+          scheduledSources = [];
+          // 预调度前2小节
+          scheduleDrumNotes(bpm, playStartTime, 0, subdivisionsCount * 2);
+          function rafLoop() {
+            if(!isPlaying) return;
+            const now = audioCtx.currentTime;
+            const elapsed = now - playStartTime;
+            const step = Math.floor(elapsed / interval) % subdivisionsCount;
+            highlightStep(step);
+            updateProgress(step);
+            // 滚动调度后续音符
+            if (elapsed + 0.2 > (scheduledStep * interval)) {
+              scheduleDrumNotes(bpm, playStartTime, scheduledStep, scheduledStep + subdivisionsCount);
+              scheduledStep += subdivisionsCount;
+            }
+            drumPlayRAF = requestAnimationFrame(rafLoop);
+          }
+          rafLoop();
+        }
+        function pauseDrumMachine() {
+          isPlaying = false;
+          playBtn.disabled = false;
+          pauseBtn.disabled = true;
+          highlightStep(-1);
+          if (drumPlayRAF) cancelAnimationFrame(drumPlayRAF);
+          // 立即停止所有已调度但未播放的音频
+          scheduledSources.forEach(src => {
+            try { src.stop && src.stop(); } catch(e){}
+          });
+          scheduledSources = [];
+        }
+        function resetDrumMachine() {
+          isPlaying = false;
+          highlightStep(-1);
+          updateProgress(0);
+          playBtn.disabled = false;
+          pauseBtn.disabled = true;
+          if (drumPlayRAF) cancelAnimationFrame(drumPlayRAF);
+        }
+        window.resetDrumMachine = resetDrumMachine;
+
         if(bottomInfo) bottomInfo.textContent = '';
     } else {
         bottomContent.innerHTML = '<div class="no-selection">请选择鼓机块</div>';
