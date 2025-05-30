@@ -81,11 +81,11 @@ window.studio.bottom = (function() {
                         bottomInfo.textContent = '';
                     }
                 } else if(tabType === 'editor') {
-                    // Render drum machine using the external module
-                    if (window.renderDrumMachine) {
-                        window.renderDrumMachine();
+                    // 鼓机编辑器：如果有 currentSegment，调用新版 drum 机渲染，否则提示选择鼓机块
+                    if (window.renderDrumMachineEditor) {
+                        window.renderDrumMachineEditor(currentSegment);
                     } else {
-                        console.error('renderDrumMachine 未定义，请检查 drum_machine.js 是否已正确加载');
+                        console.error('renderDrumMachineEditor 未定义，请检查 drum_machine.js 是否已正确加载');
                         bottomContent.innerHTML = '<div style="color:red">鼓机模块加载失败</div>';
                     }
                 } else {
@@ -125,6 +125,10 @@ window.studio.bottom = (function() {
         init
     };
 })();
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.studio.bottom.init();
+});
 
 window.renderDrumEditorWithPlayButton = function() {
     const bottomContent = document.getElementById('studio-bottom-content');
