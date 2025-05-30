@@ -29,7 +29,6 @@ window.studio.bottom = (function() {
             const name = item ? item.querySelector('span').textContent : '未知轨道';
             bottomContent.innerHTML = `
               <div id="track-inspector">
-                <div>Track Inspector: ${name}</div>
                 <label>Volume: <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="${window.studio.arrangement.getTrackSettings(detail.index).volume}"></label>
                 <label>Pan: <input type="range" id="pan-slider" min="-50" max="50" step="1" value="${window.studio.arrangement.getTrackSettings(detail.index).pan}"></label>
                 <button id="mute-btn" class="${window.studio.arrangement.getTrackSettings(detail.index).muted ? 'active' : ''}">Mute</button>
@@ -94,6 +93,9 @@ window.studio.bottom = (function() {
             // activate inspector tab
             if(inspectorTab) inspectorTab.click();
         });
+        // 初始选择第一轨道
+        const firstTrack = document.querySelector('.studio-track-scroll .track-list .track-item');
+        if (firstTrack) firstTrack.click();
     }
 
     return {

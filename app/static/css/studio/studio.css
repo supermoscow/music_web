@@ -172,6 +172,10 @@ body {
 .track-item:active {
     background: #333;
 }
+.track-item.selected {
+    background: #3a3e41;
+    border: 2px solid #7289da;
+}
 .studio-arrangement {
     flex: 1;
     background: #181a1b;

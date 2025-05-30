@@ -93,6 +93,16 @@ window.studio.track = (function() {
                 }
             });
         });
+        // 默认添加一个录音轨道并选中
+        const defaultBtn = addTrackMenu.querySelector('button[data-type="audio"]');
+        if (defaultBtn) {
+            defaultBtn.click();
+            // 选中新增轨道以触发 inspector
+            setTimeout(() => {
+                const firstTrack = trackList.querySelector('.track-item');
+                if (firstTrack) firstTrack.click();
+            }, 0);
+        }
         // 拖动排序
         trackList.addEventListener('mousedown', function(e) {
             if(e.target.classList.contains('track-item')) {
