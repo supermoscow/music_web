@@ -13,6 +13,23 @@ window.studio.track = (function() {
         });
     }
 
+    function playDrumBlock(playheadPosition) {
+        const drumBlocks = document.querySelectorAll('.track-item[data-type="drum"]');
+        drumBlocks.forEach(block => {
+            const startTime = parseFloat(block.dataset.startTime);
+            const endTime = parseFloat(block.dataset.endTime);
+            if (playheadPosition >= startTime && playheadPosition <= endTime) {
+                const audio = new Audio(block.dataset.audioSrc);
+                audio.play();
+            }
+        });
+    }
+
+    function updatePlayhead(playheadPosition) {
+        playDrumBlock(playheadPosition);
+        // Update UI or other logic for playhead
+    }
+
     function init() {
         const addTrackBtn = document.getElementById('add-track-btn');
         const addTrackMenu = document.getElementById('add-track-menu');
@@ -39,7 +56,11 @@ window.studio.track = (function() {
                 track.dataset.solo = 'false';
                 let icon = '';
                 if(type === 'audio') icon = '🎤';
-                if(type === 'drum') icon = '🥁';
+                if(type === 'drum') {
+                    icon = '🥁';
+                    // Example: Set audio source for drum blocks
+                    track.dataset.audioSrc = '/static/audio/drum/boombap/kick.wav'; // Replace with dynamic logic if needed
+                }
                 if(type === 'piano') icon = '🎹';
                 track.innerHTML = `
                     <span>${icon} 轨道${trackCount} (${type})</span>
@@ -154,6 +175,12 @@ window.studio.track = (function() {
                 window.dispatchEvent(new CustomEvent('trackSelected', { detail: { index, type } }));
             }
         });
+
+        // Example usage: simulate playhead movement
+        setInterval(() => {
+            const playheadPosition = getCurrentPlayheadPosition(); // Assume this function exists
+            updatePlayhead(playheadPosition);
+        }, 100);
     }
     return { init };
 })();

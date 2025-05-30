@@ -63,13 +63,39 @@ window.studio.arrangement = (function(){
                         const endSnap = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
                         if(endSnap > startSnap) {
                             segEl.style.width = (endSnap - startSnap) + 'px';
-                            tracks[idx].segments.push({
+                            const segment = {
                                 start: startSnap / pxPerSec,
                                 duration: (endSnap - startSnap) / pxPerSec,
                                 el: segEl,
                                 buffer: null,
                                 played: false
+                            };
+                            segment.beats = (endSnap - startSnap) / currentPxPerBeat;
+                            tracks[idx].segments.push(segment);
+                            // selection in select-mode and removal in delete-mode
+                            segEl.addEventListener('click', e => {
+                                e.stopPropagation();
+                                const rowEl = segEl.closest('.arrangement-track-row');
+                                const trackIndex = parseInt(rowEl.dataset.index, 10);
+                                if (document.body.classList.contains('delete-mode')) {
+                                    const arr = tracks[trackIndex].segments;
+                                    const i = arr.indexOf(segment);
+                                    if (i > -1) arr.splice(i, 1);
+                                    segEl.remove();
+                                } else {
+                                    // deselect other blocks
+                                    document.querySelectorAll('.arr-segment.drum-block.selected').forEach(el=>el.classList.remove('selected'));
+                                    segEl.classList.add('selected');
+                                    // select corresponding track-item
+                                    const items = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
+                                    items.forEach(i=>i.classList.remove('selected'));
+                                    const ti = items[trackIndex]; if(ti) ti.classList.add('selected');
+                                    // notify bottom panel
+                                    window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex, segment } }));
+                                }
                             });
+                            // enable dragging and resizing in select-mode
+                            makeDraggableResizable(segEl, segment, idx);
                         } else {
                             row.removeChild(segEl);
                         }
@@ -257,51 +283,83 @@ window.studio.arrangement = (function(){
         // selection and deletion in modes
         segEl.addEventListener('click', e => {
             e.stopPropagation();
-            if(document.body.classList.contains('delete-mode')) {
-                const rowEl = segEl.closest('.arrangement-track-row');
-                const ti = parseInt(rowEl.dataset.index);
-                const track = tracks[ti];
-                const idx = track.segments.findIndex(s => s.el === segEl);
-                if(idx > -1) track.segments.splice(idx,1);
+            const rowEl = segEl.closest('.arrangement-track-row');
+            const trackIndex = parseInt(rowEl.dataset.index, 10);
+            if (document.body.classList.contains('delete-mode')) {
+                const arr = tracks[trackIndex].segments;
+                const i = arr.indexOf(segment);
+                if (i > -1) arr.splice(i, 1);
                 segEl.remove();
             } else {
                 segEl.classList.toggle('selected');
+                window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex, segment } }));
             }
         });
-        makeDraggableResizable(segEl, segment);
+        makeDraggableResizable(segEl, segment, trackIndex);
     }
 
-    function makeDraggableResizable(el, segment){
+    function makeDraggableResizable(el, segment, trackIndex){
         let mode = null, startX = 0, origLeft = 0, origWidth = 0;
         el.addEventListener('mousedown', e => {
+            // only allow drag/resize in select-mode
+            if(!document.body.classList.contains('select-mode')) return;
             e.preventDefault();
             startX = e.clientX;
             origLeft = parseFloat(el.style.left);
             origWidth = parseFloat(el.style.width);
-            if(e.offsetX > origWidth - 10) mode = 'resize'; else mode = 'move';
+            const localX = e.offsetX;
+            if(localX < 10) mode = 'resize-left';
+            else if(localX > origWidth - 10) mode = 'resize-right';
+            else mode = 'move';
             function onMove(ev){
                 const dx = ev.clientX - startX;
                 if(mode === 'move'){
-                    let newLeft = origLeft + dx;
+                    let newLeft = Math.round((origLeft + dx) / currentPxPerBeat) * currentPxPerBeat;
                     // clamp within container
                     const parentW = el.parentElement.getBoundingClientRect().width;
                     newLeft = Math.max(0, Math.min(newLeft, parentW - origWidth));
-                    // snap to nearest beat line if within threshold
-                    if(currentPxPerBeat > 0) {
-                        const snapPos = Math.round(newLeft / currentPxPerBeat) * currentPxPerBeat;
-                        if(Math.abs(newLeft - snapPos) <= snapThreshold) newLeft = snapPos;
+                    // prevent overlap
+                    let overlap = false;
+                    tracks[trackIndex].segments.forEach(s=>{
+                        if(s === segment) return;
+                        const oL = parseFloat(s.el.style.left);
+                        const oR = oL + parseFloat(s.el.style.width);
+                        if(newLeft < oR && newLeft + origWidth > oL) overlap = true;
+                    });
+                    if(!overlap) {
+                        el.style.left = newLeft + 'px';
+                        segment.start = newLeft / pxPerSec;
                     }
-                    el.style.left = newLeft + 'px';
-                    segment.start = newLeft / pxPerSec;
-                } else if(mode === 'resize'){
-                    const newW = Math.max(10, origWidth + dx);
+                } else if(mode === 'resize-right'){
+                    let newW = origWidth + dx;
+                    newW = Math.max(currentPxPerBeat, newW);
+                    newW = Math.round(newW / currentPxPerBeat) * currentPxPerBeat;
                     el.style.width = newW + 'px';
                     segment.duration = newW / pxPerSec;
+                    segment.beats = newW / currentPxPerBeat;
+                } else if(mode === 'resize-left'){
+                    let newL = origLeft + dx;
+                    let newW = origWidth - dx;
+                    // clamp
+                    if(newL < 0){ newW += newL; newL = 0; }
+                    newW = Math.max(currentPxPerBeat, newW);
+                    newL = Math.round(newL / currentPxPerBeat) * currentPxPerBeat;
+                    const delta = newL - origLeft;
+                    newW = origWidth - delta;
+                    el.style.left = newL + 'px';
+                    el.style.width = newW + 'px';
+                    segment.start = newL / pxPerSec;
+                    segment.duration = newW / pxPerSec;
+                    segment.beats = newW / currentPxPerBeat;
                 }
             }
             function onUp(){
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
+                // notify that segment was updated (for live editor refresh)
+                if(el.classList.contains('drum-block')){
+                    window.dispatchEvent(new CustomEvent('segmentUpdated', { detail: { trackIndex, segment } }));
+                }
             }
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
@@ -444,7 +502,28 @@ window.studio.arrangement = (function(){
                     const endSnap = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
                     if(endSnap > startSnap) {
                         segEl.style.width = (endSnap - startSnap) + 'px';
-                        tracks[idx].segments.push({ start: startSnap / pxPerSec, duration: (endSnap - startSnap) / pxPerSec, el: segEl, buffer: null, played: false });
+                        const segment = { start: startSnap / pxPerSec, duration: (endSnap - startSnap) / pxPerSec, el: segEl, buffer: null, played: false };
+                        segment.beats = (endSnap - startSnap) / currentPxPerBeat;
+                        tracks[idx].segments.push(segment);
+                        segEl.addEventListener('click', e => {
+                            e.stopPropagation();
+                            const rowEl = segEl.closest('.arrangement-track-row');
+                            const trackIndex = parseInt(rowEl.dataset.index, 10);
+                            if (document.body.classList.contains('delete-mode')) {
+                                const arr = tracks[trackIndex].segments;
+                                const i = arr.indexOf(segment);
+                                if (i > -1) arr.splice(i, 1);
+                                segEl.remove();
+                            } else {
+                                document.querySelectorAll('.arr-segment.drum-block.selected').forEach(el=>el.classList.remove('selected'));
+                                segEl.classList.add('selected');
+                                const items = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
+                                items.forEach(i=>i.classList.remove('selected'));
+                                const ti = items[trackIndex]; if(ti) ti.classList.add('selected');
+                                window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex, segment } }));
+                            }
+                        });
+                        makeDraggableResizable(segEl, segment, idx);
                     } else {
                         row.removeChild(segEl);
                     }
