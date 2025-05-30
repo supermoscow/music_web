@@ -30,6 +30,26 @@ window.studio.track = (function() {
         // Update UI or other logic for playhead
     }
 
+    window.addEventListener('playheadMoved', function(e) {
+        const playheadPosition = e.detail.position;
+        updatePlayhead(playheadPosition);
+    });
+
+    function addDrumBlock(track, startTime, endTime, audioSrc) {
+        const block = document.createElement('div');
+        block.className = 'track-item';
+        block.dataset.type = 'drum';
+        block.dataset.startTime = startTime;
+        block.dataset.endTime = endTime;
+        block.dataset.audioSrc = audioSrc;
+        track.appendChild(block);
+    }
+
+    function getCurrentPlayheadPosition() {
+        // Example implementation: return a mock position
+        return 0; // Replace with actual logic to get playhead position
+    }
+
     function init() {
         const addTrackBtn = document.getElementById('add-track-btn');
         const addTrackMenu = document.getElementById('add-track-menu');

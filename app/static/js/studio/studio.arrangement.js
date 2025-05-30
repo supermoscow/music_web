@@ -165,6 +165,27 @@ window.studio.arrangement = (function(){
         });
     }
 
+    function updatePlayheadPosition(newPosition) {
+        currentPos = newPosition;
+        if (playheadEl) {
+            playheadEl.style.left = `${currentPos}px`;
+        }
+        // Trigger playheadMoved event
+        window.dispatchEvent(new CustomEvent('playheadMoved', { detail: { position: currentPos } }));
+    }
+
+    function startPlayback() {
+        isPlaying = true;
+        playheadTimer = setInterval(() => {
+            updatePlayheadPosition(currentPos + 1); // Example increment, adjust based on tempo
+        }, 1000 / pxPerSec);
+    }
+
+    function stopPlayback() {
+        isPlaying = false;
+        clearInterval(playheadTimer);
+    }
+
     function startPlayhead(){
         if(isPlaying) return;
         activeSources = []; // clear previous sources
@@ -462,6 +483,10 @@ window.studio.arrangement = (function(){
 
     // add a single new track row without clearing existing tracks
     function addTrackRow(type) {
+        if (!arrangementArea) {
+            console.error('arrangementArea is not initialized. Ensure .arrangement-area exists in the DOM.');
+            return;
+        }
         const idx = tracks.length;
         const trackObj = {type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false};
         trackObj.gainNode = audioCtx.createGain();
@@ -615,5 +640,5 @@ window.studio.arrangement = (function(){
         });
     }
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo, setTrackVolume, setTrackPan, armTrack, getTrackSettings, updateGainStates};
+    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo, setTrackVolume, setTrackPan, armTrack, getTrackSettings, updateGainStates, updatePlayheadPosition, startPlayback, stopPlayback};
 })();
