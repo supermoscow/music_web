@@ -7,9 +7,10 @@ window.studio.arrangement = (function(){
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let tracks = [];
     let activeSources = []; // track playing AudioBufferSourceNodes for stop control
-    let barPositions = [];
     const snapThreshold = 8; // px proximity for snap
     let currentPxPerBar = 0;
+    let currentPxPerBeat = 0; // spacing for beats
+    let timelineHandleEl;
 
     function refreshArrangement(){
         arrangementArea = document.querySelector('.arrangement-area');
@@ -71,10 +72,10 @@ window.studio.arrangement = (function(){
                 // clamp
                 const max = scrollArea.scrollWidth;
                 newLeft = Math.max(0, Math.min(newLeft, max));
-                // snap to nearest bar if within threshold
-                if(currentPxPerBar > 0) {
-                    const snap = Math.round(newLeft / currentPxPerBar) * currentPxPerBar;
-                    if(Math.abs(snap - newLeft) <= snapThreshold) newLeft = snap;
+                // snap to nearest beat line if within threshold
+                if(currentPxPerBeat > 0) {
+                    const snapLine = Math.round(newLeft / currentPxPerBeat) * currentPxPerBeat;
+                    if(Math.abs(snapLine - newLeft) <= snapThreshold) newLeft = snapLine;
                 }
                 playheadEl.style.left = newLeft + 'px';
                 currentPos = newLeft;
@@ -225,9 +226,9 @@ window.studio.arrangement = (function(){
                     // clamp within container
                     const parentW = el.parentElement.getBoundingClientRect().width;
                     newLeft = Math.max(0, Math.min(newLeft, parentW - origWidth));
-                    // snap to closest bar line
-                    if(currentPxPerBar > 0) {
-                        const snapPos = Math.round(newLeft / currentPxPerBar) * currentPxPerBar;
+                    // snap to nearest beat line if within threshold
+                    if(currentPxPerBeat > 0) {
+                        const snapPos = Math.round(newLeft / currentPxPerBeat) * currentPxPerBeat;
                         if(Math.abs(newLeft - snapPos) <= snapThreshold) newLeft = snapPos;
                     }
                     el.style.left = newLeft + 'px';
@@ -251,6 +252,7 @@ window.studio.arrangement = (function(){
     function setPosition(seconds){
         currentPos = seconds * pxPerSec;
         if(playheadEl) playheadEl.style.left = currentPos + 'px';
+        if(timelineHandleEl) timelineHandleEl.style.left = currentPos + 'px';
     }
 
     // initialize timeline ticks and click-to-seek
@@ -263,8 +265,9 @@ window.studio.arrangement = (function(){
         const secondsPerBar = (60 / bpm) * beatsPerBar;
         const pxPerBar = secondsPerBar * pxPerSec;
         const numBars = 32;
-        // store pxPerBar for snapping
+        // store pxPerBar and pxPerBeat for snapping
         currentPxPerBar = pxPerBar;
+        currentPxPerBeat = pxPerBar / beatsPerBar;
         const totalWidth = numBars * pxPerBar;
         // set wrapper and arrangement-area widths
         wrapper.innerHTML = '';
@@ -283,14 +286,50 @@ window.studio.arrangement = (function(){
             wrapper.appendChild(tick);
         }
         const timelineScroll = document.querySelector('.studio-timeline-scroll');
+        // create or reset timeline playhead handle
+        if(timelineHandleEl) timelineHandleEl.remove();
+        timelineHandleEl = document.createElement('div');
+        timelineHandleEl.className = 'timeline-playhead-handle';
+        timelineHandleEl.style.position = 'absolute';
+        timelineHandleEl.style.top = '0';
+        timelineHandleEl.style.height = '100%';
+        timelineHandleEl.style.width = '2px';
+        timelineHandleEl.style.background = 'red';
+        timelineHandleEl.style.cursor = 'ew-resize';
+        timelineHandleEl.style.zIndex = '1000';
+        wrapper.appendChild(timelineHandleEl);
+        timelineHandleEl.style.left = currentPos + 'px';
+        // drag to move playhead
+        timelineHandleEl.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const totalW = parseFloat(wrapper.style.width);
+            let startX = e.clientX;
+            let origLeft = parseFloat(timelineHandleEl.style.left);
+            function onMove(ev) {
+                let dx = ev.clientX - startX;
+                let newL = Math.max(0, Math.min(origLeft + dx, totalW));
+                playheadEl.style.left = newL + 'px';
+                timelineHandleEl.style.left = newL + 'px';
+                currentPos = newL;
+                // update timer display
+                const sec = currentPos / pxPerSec;
+                const h = String(Math.floor(sec/3600)).padStart(2,'0');
+                const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
+                const s = String(Math.floor(sec%60)).padStart(2,'0');
+                document.querySelector('.studio-timer').textContent = `${h}:${m}:${s}`;
+            }
+            function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
         // click-to-seek
         timelineScroll.addEventListener('click', e => {
             const rect = wrapper.getBoundingClientRect();
             let x = e.clientX - rect.left;
-            // snap to nearest bar if within threshold
-            if(currentPxPerBar > 0) {
-                const snap = Math.round(x / currentPxPerBar) * currentPxPerBar;
-                if(Math.abs(snap - x) <= snapThreshold) x = snap;
+            // snap to nearest beat line if within threshold
+            if(currentPxPerBeat > 0) {
+                const snapLine = Math.round(x / currentPxPerBeat) * currentPxPerBeat;
+                if(Math.abs(snapLine - x) <= snapThreshold) x = snapLine;
             }
             setPosition(x / pxPerSec);
             // update timer display
