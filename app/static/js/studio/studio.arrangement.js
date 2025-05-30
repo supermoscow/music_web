@@ -7,6 +7,9 @@ window.studio.arrangement = (function(){
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let tracks = [];
     let activeSources = []; // track playing AudioBufferSourceNodes for stop control
+    let barPositions = [];
+    const snapThreshold = 8; // px proximity for snap
+    let currentPxPerBar = 0;
 
     function refreshArrangement(){
         arrangementArea = document.querySelector('.arrangement-area');
@@ -55,6 +58,40 @@ window.studio.arrangement = (function(){
         playheadEl.style.background = 'red';
         playheadEl.style.zIndex = '9999';
         scroll.appendChild(playheadEl);
+        // make playhead draggable with snap
+        let phStartX, phOrigLeft;
+        playheadEl.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const scrollArea = document.querySelector('.studio-arrangement-scroll');
+            phStartX = e.clientX;
+            phOrigLeft = parseFloat(playheadEl.style.left);
+            function onMove(ev) {
+                let dx = ev.clientX - phStartX;
+                let newLeft = phOrigLeft + dx;
+                // clamp
+                const max = scrollArea.scrollWidth;
+                newLeft = Math.max(0, Math.min(newLeft, max));
+                // snap to nearest bar if within threshold
+                if(currentPxPerBar > 0) {
+                    const snap = Math.round(newLeft / currentPxPerBar) * currentPxPerBar;
+                    if(Math.abs(snap - newLeft) <= snapThreshold) newLeft = snap;
+                }
+                playheadEl.style.left = newLeft + 'px';
+                currentPos = newLeft;
+                // update timer
+                const sec = currentPos / pxPerSec;
+                const h = String(Math.floor(sec/3600)).padStart(2,'0');
+                const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
+                const s = String(Math.floor(sec%60)).padStart(2,'0');
+                document.querySelector('.studio-timer').textContent = `${h}:${m}:${s}`;
+            }
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
     }
 
     function startPlayhead(){
@@ -184,7 +221,15 @@ window.studio.arrangement = (function(){
             function onMove(ev){
                 const dx = ev.clientX - startX;
                 if(mode === 'move'){
-                    const newLeft = origLeft + dx;
+                    let newLeft = origLeft + dx;
+                    // clamp within container
+                    const parentW = el.parentElement.getBoundingClientRect().width;
+                    newLeft = Math.max(0, Math.min(newLeft, parentW - origWidth));
+                    // snap to closest bar line
+                    if(currentPxPerBar > 0) {
+                        const snapPos = Math.round(newLeft / currentPxPerBar) * currentPxPerBar;
+                        if(Math.abs(newLeft - snapPos) <= snapThreshold) newLeft = snapPos;
+                    }
                     el.style.left = newLeft + 'px';
                     segment.start = newLeft / pxPerSec;
                 } else if(mode === 'resize'){
@@ -218,6 +263,8 @@ window.studio.arrangement = (function(){
         const secondsPerBar = (60 / bpm) * beatsPerBar;
         const pxPerBar = secondsPerBar * pxPerSec;
         const numBars = 32;
+        // store pxPerBar for snapping
+        currentPxPerBar = pxPerBar;
         const totalWidth = numBars * pxPerBar;
         // set wrapper and arrangement-area widths
         wrapper.innerHTML = '';
@@ -239,7 +286,12 @@ window.studio.arrangement = (function(){
         // click-to-seek
         timelineScroll.addEventListener('click', e => {
             const rect = wrapper.getBoundingClientRect();
-            const x = e.clientX - rect.left;
+            let x = e.clientX - rect.left;
+            // snap to nearest bar if within threshold
+            if(currentPxPerBar > 0) {
+                const snap = Math.round(x / currentPxPerBar) * currentPxPerBar;
+                if(Math.abs(snap - x) <= snapThreshold) x = snap;
+            }
             setPosition(x / pxPerSec);
             // update timer display
             const sec = currentPos / pxPerSec;
