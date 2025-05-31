@@ -10,6 +10,7 @@ window.studio.arrangement = (function(){
     const snapThreshold = 8; // px proximity for snap
     let currentPxPerBar = 0;
     let currentPxPerBeat = 0; // spacing for beats
+    let drumBlockCounter = 1; // counter for drum-block numbering
 
     function refreshArrangement(){
         arrangementArea = document.querySelector('.arrangement-area');
@@ -37,6 +38,7 @@ window.studio.arrangement = (function(){
             // enable paint-mode drum block creation
             if(type === 'drum') {
                 row.addEventListener('mousedown', function(e) {
+                    console.log('[debug] mousedown on drum row');
                     if(!document.body.classList.contains('paint-mode')) return;
                     e.preventDefault();
                     const scrollContainer = document.querySelector('.studio-arrangement-scroll');
@@ -49,6 +51,7 @@ window.studio.arrangement = (function(){
                     segEl.style.width = '0px';
                     row.appendChild(segEl);
                     function onMove(ev) {
+                        console.log('[debug] mousemove on drum row');
                         ev.preventDefault();
                         const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
                         let snapX = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
@@ -57,6 +60,7 @@ window.studio.arrangement = (function(){
                         segEl.style.width = width + 'px';
                     }
                     function onUp(ev) {
+                        console.log('[debug] mouseup on drum row');
                         document.removeEventListener('mousemove', onMove);
                         document.removeEventListener('mouseup', onUp);
                         const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
@@ -70,6 +74,16 @@ window.studio.arrangement = (function(){
                                 buffer: null,
                                 played: false
                             };
+                            // assign block number and label
+                            segment.name = 'Block ' + drumBlockCounter;
+                            segment.number = drumBlockCounter; // 新增编号属性
+                            segEl.segment = segment; // 关键：将 segment 赋值给 segEl，便于后续读取编号
+                            // 用span包裹编号，便于样式控制
+                            const numSpan = document.createElement('span');
+                            numSpan.className = 'drum-block-number';
+                            numSpan.textContent = drumBlockCounter;
+                            segEl.appendChild(numSpan);
+                            drumBlockCounter++;
                             segment.beats = (endSnap - startSnap) / currentPxPerBeat;
                             tracks[idx].segments.push(segment);
                             // selection in select-mode and removal in delete-mode
@@ -96,6 +110,8 @@ window.studio.arrangement = (function(){
                             });
                             // enable dragging and resizing in select-mode
                             makeDraggableResizable(segEl, segment, idx);
+                            // 调试：每次新建 drum-block 时打印
+                            console.log('[debug][create] drum-block', segEl, segEl.textContent, segEl.querySelector('.drum-block-number'));
                         } else {
                             row.removeChild(segEl);
                         }
@@ -113,6 +129,31 @@ window.studio.arrangement = (function(){
         initPlayhead();
         initTimeline();
         setPosition(currentPos/pxPerSec); // restore position
+
+        // --- 保证所有 drum-block 都有编号 ---
+        setTimeout(() => {
+            const blocks = document.querySelectorAll('.arr-segment.drum-block');
+            blocks.forEach((block, idx) => {
+                // 如果没有编号span则补充
+                if (!block.querySelector('.drum-block-number')) {
+                    let number = '?';
+                    if (block.segment && block.segment.number) {
+                        number = block.segment.number;
+                    } else {
+                        number = idx + 1;
+                    }
+                    const numSpan = document.createElement('span');
+                    numSpan.className = 'drum-block-number';
+                    numSpan.textContent = number;
+                    block.appendChild(numSpan);
+                }
+            });
+        }, 100);
+
+        // 立即调试：每次新建 drum-block 时打印
+        document.querySelectorAll('.arr-segment.drum-block').forEach((block, idx) => {
+            console.log('[debug][immediate] drum-block', idx, block, block.textContent, block.querySelector('.drum-block-number'));
+        });
     }
 
     function initPlayhead(){
@@ -511,6 +552,7 @@ window.studio.arrangement = (function(){
         // enable paint-mode drum block creation for new row
         if(type === 'drum') {
             row.addEventListener('mousedown', function(e) {
+                console.log('[debug] mousedown on drum row');
                 if(!document.body.classList.contains('paint-mode')) return;
                 e.preventDefault();
                 const scrollContainer = document.querySelector('.studio-arrangement-scroll');
@@ -523,6 +565,7 @@ window.studio.arrangement = (function(){
                 segEl.style.width = '0px';
                 row.appendChild(segEl);
                 function onMove(ev) {
+                    console.log('[debug] mousemove on drum row');
                     ev.preventDefault();
                     const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
                     let snapX = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
@@ -531,6 +574,7 @@ window.studio.arrangement = (function(){
                     segEl.style.width = width + 'px';
                 }
                 function onUp(ev) {
+                    console.log('[debug] mouseup on drum row');
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onUp);
                     const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;

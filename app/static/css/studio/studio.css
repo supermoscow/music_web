@@ -264,6 +264,31 @@ body {
     z-index: 10;
     pointer-events: auto;
     cursor: pointer;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+
+    min-width: 40px;
+    min-height: 32px;
+
+}
+.drum-block-number {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+    pointer-events: none;
+    user-select: none;
+    z-index: 20;
+    position: relative;
+
+    background: rgba(0,0,0,0.5);
+    padding: 2px 8px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+
 }
 /* Highlight selected drum-block in arrangement */
 .arr-segment.drum-block.selected {
@@ -461,7 +486,7 @@ body.delete-mode .waveform-block:hover {
     flex-shrink: 0;
 }
 
-/* 模式按钮样式 */
+/* ��式按钮样式 */
 .studio-modes button {
     background: #444;
     border: none;

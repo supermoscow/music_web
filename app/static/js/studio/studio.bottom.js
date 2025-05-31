@@ -63,9 +63,14 @@ window.studio.bottom = (function() {
 
         let currentSelection = null;
         let currentSegment = null;
-        // listen for drum block selection
+        // listen for drum block selection: update bottomInfo with track and block name
         window.addEventListener('segmentSelected', function(e) {
             currentSegment = e.detail;
+            const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
+            const trackName = trackItems[e.detail.trackIndex]?.querySelector('span').textContent || '';
+            const blockName = e.detail.segment.name || '';
+            const blockNumber = e.detail.segment.number ? (' #' + e.detail.segment.number) : '';
+            bottomInfo.textContent = trackName + (blockName ? ' - ' + blockName : '') + blockNumber;
         });
         bottomTabs.forEach(tab => {
             tab.addEventListener('click', function() {
