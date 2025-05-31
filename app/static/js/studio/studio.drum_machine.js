@@ -1,12 +1,35 @@
 // studio.drum_machine.js
 // 重写鼓机逻辑
 
-function renderDrumMachineEditor(currentSegment) {
+async function renderDrumMachineEditor(currentSegment) {
     const bottomContent = document.getElementById('studio-bottom-content');
     const bottomInfo = document.querySelector('.studio-bottom-info');
+    // load presets and soundbank once
+    if (!window._drumPresets) {
+      const res = await fetch('/studio/drum-sounds');
+      const data = await res.json();
+      window._drumPresets = data.presets;
+      window._drumSoundbank = data.soundbank;
+      window._drumExtra = window._drumExtra || [];
+    }
     const meter = document.getElementById('studio-meter-select').value;
-    const beatsPerBar = parseInt(meter.split('/')[0]);
     if(currentSegment) {
+        // preset selector UI
+        let presetSelect = document.getElementById('drum-preset-select');
+        if (!presetSelect) {
+          const presetBar = document.createElement('div');
+          presetBar.className = 'drum-preset-bar';
+          presetBar.innerHTML = '风格预设: ';
+          presetSelect = document.createElement('select');
+          presetSelect.id = 'drum-preset-select';
+          Object.keys(window._drumPresets).forEach(style => {
+            const opt = document.createElement('option'); opt.value = style; opt.textContent = style;
+            presetSelect.appendChild(opt);
+          });
+          presetBar.appendChild(presetSelect);
+          bottomContent.parentNode.insertBefore(presetBar, bottomContent);
+          presetSelect.addEventListener('change', () => renderDrumMachineEditor(currentSegment));
+        }
         // 计算格子尺寸和总宽度
         const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--drum-cell-size')) || 32;
         const subdivisions = 4; // 每拍4格
@@ -15,11 +38,10 @@ function renderDrumMachineEditor(currentSegment) {
         const cellWidth = cellSize;
         const totalPx = cellSize * subdivisionsCount;
         // 鼓机声音列表
-        const sounds = [
-            {name: 'Kick', file: '/static/audio/drum/boombap/kick.wav'},
-            {name: 'Snare', file: '/static/audio/drum/boombap/snare.wav'},
-            {name: 'Hi-hat', file: '/static/audio/drum/boombap/hihat.wav'}
-        ];
+        // build sounds from selected preset + extras
+        const style = presetSelect.value;
+        const baseSounds = window._drumPresets[style] || [];
+        const sounds = baseSounds.concat(window._drumExtra);
 
         const segment = currentSegment.segment;
         // init or resize pattern matrix, preserve existing data
@@ -78,8 +100,8 @@ function renderDrumMachineEditor(currentSegment) {
                 // restore active state
                 if(segment.pattern[rowIdx][b]) cell.classList.add('active');
                 cell.addEventListener('click', () => {
-                    const active = cell.classList.toggle('active');
-                    segment.pattern[rowIdx][b] = active;
+                    cell.classList.toggle('active');
+                    segment.pattern[rowIdx][b] = cell.classList.contains('active');
                     // 通知鼓块模式更新，用于刷新缩略图
                     window.dispatchEvent(new CustomEvent('segmentUpdated', { detail: { segment } }));
                 });
@@ -88,6 +110,71 @@ function renderDrumMachineEditor(currentSegment) {
             rowEl.appendChild(rowGrid);
             grid.appendChild(rowEl);
         });
+        // 添加新音色按钮
+        let addBtn = document.getElementById('drum-add-sound-btn');
+        if (!addBtn) {
+          addBtn = document.createElement('button'); addBtn.id='drum-add-sound-btn'; addBtn.textContent='+';
+          addBtn.style.margin='8px';
+          grid.parentNode.appendChild(addBtn);
+          addBtn.addEventListener('click', () => {
+            // remove existing menu if any
+            const prev = document.querySelector('.drum-sound-menu'); if (prev) prev.remove();
+            // show selection menu near button
+            const sel = document.createElement('div'); sel.className='drum-sound-menu';
+            sel.style.position = 'fixed';
+            sel.style.background = '#333'; sel.style.color = '#fff'; sel.style.zIndex = '1000';
+            sel.style.maxHeight = '300px'; sel.style.overflowY = 'auto';
+            // position popup
+            const rect = addBtn.getBoundingClientRect();
+            sel.style.left = `${rect.left}px`;
+            sel.style.top = `${rect.bottom}px`;
+            // preset groups
+            Object.entries(window._drumPresets).forEach(([style, items]) => {
+              const header = document.createElement('div'); header.textContent=style; header.style.fontWeight='bold'; sel.appendChild(header);
+              items.forEach(s => {
+                const item = document.createElement('div'); item.textContent=s.name; item.dataset.file=s.file;
+                item.style.cursor='pointer'; item.style.padding='2px 8px';
+                item.addEventListener('click', () => {
+                  window._drumExtra.push({name: s.name, file: s.file});
+                  sel.remove();
+                  renderDrumMachineEditor(currentSegment);
+                }); sel.appendChild(item);
+              });
+            });
+            // soundbank groups
+            const sbHeader = document.createElement('div'); sbHeader.textContent='Soundbank'; sbHeader.style.fontWeight='bold'; sel.appendChild(sbHeader);
+            Object.entries(window._drumSoundbank).forEach(([group, items]) => {
+              const groupHeader = document.createElement('div'); groupHeader.textContent=group; groupHeader.style.textDecoration='underline'; sel.appendChild(groupHeader);
+              items.forEach(s => {
+                const item = document.createElement('div'); item.textContent=s.name; item.dataset.file=s.file;
+                item.style.cursor='pointer'; item.style.padding='2px 8px';
+                item.addEventListener('click', () => {
+                  window._drumExtra.push({name: s.name, file: s.file});
+                  sel.remove();
+                  renderDrumMachineEditor(currentSegment);
+                }); sel.appendChild(item);
+              });
+            });
+            document.body.appendChild(sel);
+            // adjust position to fit within viewport
+            const {innerWidth, innerHeight} = window;
+            const menuRect = sel.getBoundingClientRect();
+            if (menuRect.bottom > innerHeight) {
+              sel.style.top = `${Math.max(0, rect.top - menuRect.height)}px`;
+            }
+            if (menuRect.right > innerWidth) {
+              sel.style.left = `${Math.max(0, innerWidth - menuRect.width)}px`;
+            }
+            // close popup when clicking outside
+            const closeHandler = e => {
+              if (!sel.contains(e.target) && e.target !== addBtn) {
+                sel.remove();
+                document.removeEventListener('click', closeHandler);
+              }
+            };
+            setTimeout(() => document.addEventListener('click', closeHandler), 0);
+          });
+        }
 
         // 鼓机播放控制UI
         const controls = document.createElement('div');
@@ -99,7 +186,7 @@ function renderDrumMachineEditor(currentSegment) {
         `;
         bottomContent.prepend(controls);
 
-        // 事件绑定必���在DOM插入后
+        // 事件绑定必须在DOM插入后
         const playBtn = controls.querySelector('#drum-play-btn');
         const pauseBtn = controls.querySelector('#drum-pause-btn');
         playBtn.onclick = playDrumMachine;
@@ -225,7 +312,7 @@ function renderDrumMachineEditor(currentSegment) {
           pauseBtn.disabled = true;
           highlightStep(-1);
           if (drumPlayRAF) cancelAnimationFrame(drumPlayRAF);
-          // ���即停止所有已调度但未播放的音频
+          // 立即停止所有已调度但未播放的音频
           scheduledSources.forEach(src => {
             try { src.stop && src.stop(); } catch(e){}
           });
