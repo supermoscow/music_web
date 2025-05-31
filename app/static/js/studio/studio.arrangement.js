@@ -196,8 +196,9 @@ window.studio.arrangement = (function(){
             // adjust speed based on BPM input
             const bpm = parseInt(document.querySelector('.studio-bpm input').value) || defaultBPM;
             const factor = bpm / defaultBPM;
-            currentPos += (pxPerSec * factor) / 60;
-            playheadEl.style.left = currentPos + 'px';
+            // update position and dispatch event for drum-machine linkage
+            const newPos = currentPos + (pxPerSec * factor) / 60;
+            updatePlayheadPosition(newPos);
             if (window.metronomeOn && typeof window.tickMetronome === 'function') window.tickMetronome(currentPos / pxPerSec);
             checkPlaySegments(currentPos / pxPerSec);
         }, 1000/60);
@@ -233,7 +234,10 @@ window.studio.arrangement = (function(){
             if(soloExists ? !track.solo : track.muted) return;
             track.segments.forEach(seg => {
                 if(!seg.played && time >= seg.start && time <= seg.start + seg.duration){
-                    if(seg.buffer){
+                    // handle drum-block segments via drum machine control
+                    if(seg.el && seg.el.classList.contains('drum-block')){
+                        if(window.playDrumMachine) window.playDrumMachine();
+                    } else if(seg.buffer){
                         const src = audioCtx.createBufferSource();
                         src.buffer = seg.buffer;
                         // adjust playback rate per current BPM
@@ -245,6 +249,12 @@ window.studio.arrangement = (function(){
                         activeSources.push(src);
                     }
                     seg.played = true;
+                }
+                // pause drum-machine when playhead exits segment
+                if(seg.played && seg.el && seg.el.classList.contains('drum-block') && time > seg.start + seg.duration){
+                    if(window.pauseDrumMachine) window.pauseDrumMachine();
+                    // allow replay if needed
+                    seg.played = false;
                 }
             });
         });
@@ -648,6 +658,14 @@ window.studio.arrangement = (function(){
         console.log('[drum-debug] playheadMoved px:', px, 'bpm:', bpm);
         // 遍历所有 drum-block
         document.querySelectorAll('.arr-segment.drum-block').forEach(block => {
+            // 确保 block.segment 正确赋值
+            if (!block.segment) {
+                // 尝试从 tracks 中查找 segment
+                for (const t of tracks) {
+                    const seg = t.segments.find(s => s.el === block);
+                    if (seg) { block.segment = seg; break; }
+                }
+            }
             const left = parseFloat(block.style.left);
             const width = parseFloat(block.style.width);
             const startPx = left;
@@ -663,15 +681,13 @@ window.studio.arrangement = (function(){
                 const playheadSec = px / pxPerSec;
                 const offsetSec = playheadSec - blockStartSec;
                 const step = Math.floor((offsetSec / blockDurationSec) * totalSteps);
-                console.log('[drum-debug] playhead in drum-block:', {block, startPx, endPx, playheadSec, offsetSec, step, totalSteps});
-                // 若未在播放，启动鼓机
-                if(!drumBlockPlaybackState || drumBlockPlaybackState.block !== block) {
+                console.log('[drum-debug] playhead in drum-block step change:', step);
+                // 首次进入或步数变化时重启鼓机
+                if(!drumBlockPlaybackState || drumBlockPlaybackState.block !== block || drumBlockPlaybackState.step !== step) {
                     if(window.studioDrumMachineControl) {
-                        console.log('[drum-debug] 调用playFromStep', step, offsetSec, bpm, totalSteps);
+                        console.log('[drum-debug] playFromStep', step, offsetSec, bpm, totalSteps);
                         window.studioDrumMachineControl.playFromStep(step, offsetSec, bpm, totalSteps);
-                        drumBlockPlaybackState = { block, playing: true };
-                    } else {
-                        console.warn('[drum-debug] studioDrumMachineControl未定义');
+                        drumBlockPlaybackState = { block, step };
                     }
                 }
             } else {

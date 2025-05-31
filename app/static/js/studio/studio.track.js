@@ -126,9 +126,14 @@ window.studio.track = (function() {
                 track.appendChild(armDot);
                 trackList.appendChild(track);
                 addTrackMenu.style.display = 'none';
-                // add only new track row, preserve existing recordings
-                if(window.studio.arrangement && window.studio.arrangement.addTrackRow) {
-                    window.studio.arrangement.addTrackRow(type);
+                // 确保 arrangementArea 已初始化
+                if(window.studio.arrangement) {
+                    if (!document.querySelector('.arrangement-area')) {
+                        window.studio.arrangement.refreshArrangement();
+                    }
+                    if(window.studio.arrangement.addTrackRow) {
+                        window.studio.arrangement.addTrackRow(type);
+                    }
                 } else if(window.studio.arrangement) {
                     window.studio.arrangement.refreshArrangement();
                 }

@@ -14,6 +14,22 @@ function renderDrumMachineEditor(currentSegment) {
         const subdivisionsCount = beatExact * subdivisions;
         const cellWidth = cellSize;
         const totalPx = cellSize * subdivisionsCount;
+        // 鼓机声音列表
+        const sounds = [
+            {name: 'Kick', file: '/static/audio/drum/boombap/kick.wav'},
+            {name: 'Snare', file: '/static/audio/drum/boombap/snare.wav'},
+            {name: 'Hi-hat', file: '/static/audio/drum/boombap/hihat.wav'}
+        ];
+
+        const segment = currentSegment.segment;
+        // init or resize pattern matrix, preserve existing data
+        if(!segment.pattern || segment.pattern.length !== sounds.length || segment.pattern[0].length !== subdivisionsCount) {
+          const old = segment.pattern || [];
+          segment.pattern = sounds.map((_, i) =>
+            Array.from({length: subdivisionsCount}, (_, j) => (old[i] && old[i][j]) || false)
+          );
+        }
+
         bottomContent.innerHTML = `
           <div id="drum-editor">
             <div class="drum-editor-header">
@@ -43,12 +59,8 @@ function renderDrumMachineEditor(currentSegment) {
             ticksContainer.appendChild(cell);
         }
         // 生成鼓机行
-        const sounds = [
-            {name: 'Kick', file: '/static/audio/drum/boombap/kick.wav'},
-            {name: 'Snare', file: '/static/audio/drum/boombap/snare.wav'},
-            {name: 'Hi-hat', file: '/static/audio/drum/boombap/hihat.wav'}
-        ];
-        sounds.forEach(sound => {
+        // sounds 已在上方声明
+        sounds.forEach((sound, rowIdx) => {
             const rowEl = document.createElement('div');
             rowEl.className = 'drum-row';
             const label = document.createElement('div');
@@ -63,8 +75,11 @@ function renderDrumMachineEditor(currentSegment) {
                 cell.className = 'drum-cell';
                 cell.style.width = cellWidth + 'px';
                 cell.dataset.file = sound.file;
+                // restore active state
+                if(segment.pattern[rowIdx][b]) cell.classList.add('active');
                 cell.addEventListener('click', () => {
-                    cell.classList.toggle('active');
+                    const active = cell.classList.toggle('active');
+                    segment.pattern[rowIdx][b] = active;
                 });
                 rowGrid.appendChild(cell);
             }

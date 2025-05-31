@@ -22,8 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if(window.studio.track) window.studio.track.init();
+    // 先 arrangement，后 track，确保 arrangementArea 初始化
     if(window.studio.arrangement) window.studio.arrangement.refreshArrangement();
+    if(window.studio.track) window.studio.track.init();
     if(window.studio.controls) window.studio.controls.init();
     if(window.studio.bottom) window.studio.bottom.init();
 });

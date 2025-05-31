@@ -67,6 +67,7 @@ window.studio.controls = (function() {
             } else {
                 clearInterval(playInterval);
                 if(window.studio.arrangement) window.studio.arrangement.stopPlayhead();
+                if(window.studioDrumMachineControl) window.studioDrumMachineControl.stop();
             }
         });
         rewindBtn.addEventListener('click', function() {
