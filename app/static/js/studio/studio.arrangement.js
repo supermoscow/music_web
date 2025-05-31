@@ -1,8 +1,8 @@
 window.studio = window.studio || {};
-window.studio.arrangement = (function(){
+window.studio.arrangement = (function() {
     const pxPerSec = 100; // base pixels per second
     const defaultBPM = 120; // grid tempo for static grid
-    let playheadEl, arrangementArea, playheadTimer, isPlaying=false;
+    let playheadEl, arrangementArea, playheadTimer, isPlaying = false;
     let currentPos = 0; // current playhead position in pixels
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let tracks = [];
@@ -28,7 +28,7 @@ window.studio.arrangement = (function(){
         // 分辨率: 列数 x 行数，对应每个step一个像素
         canvas.width = cols;
         canvas.height = rows;
-        // css拉伸至父容器大小，像素���染
+        // css拉伸至父容器大小，像素渲染
         canvas.style.width = '100%';
         canvas.style.height = '100%';
         const ctx = canvas.getContext('2d');
@@ -57,8 +57,14 @@ window.studio.arrangement = (function(){
         segEl.style.left = leftPx + 'px';
         segEl.style.width = widthPx + 'px';
         row.appendChild(segEl);
-        const newSeg = { start: pasteStart, duration: originalSeg.duration, el: segEl, buffer: originalSeg.buffer, played: false };
-        if(type === 'drum-block') {
+        const newSeg = {
+            start: pasteStart,
+            duration: originalSeg.duration,
+            el: segEl,
+            buffer: originalSeg.buffer,
+            played: false
+        };
+        if (type === 'drum-block') {
             newSeg.beats = originalSeg.beats;
             newSeg.name = originalSeg.name + ' copy';
             newSeg.number = drumBlockCounter++;
@@ -68,7 +74,7 @@ window.studio.arrangement = (function(){
             numSpan.textContent = newSeg.number;
             segEl.appendChild(numSpan);
             generateDrumThumbnail(segEl, newSeg);
-        } else if(type === 'instrument-block') {
+        } else if (type === 'instrument-block') {
             newSeg.name = originalSeg.name + ' copy';
             newSeg.number = instrumentBlockCounter++;
             segEl.segment = newSeg;
@@ -79,7 +85,7 @@ window.studio.arrangement = (function(){
         } else {
             // clone waveform canvas if present
             const origCanvas = originalSeg.el.querySelector('canvas');
-            if(origCanvas) {
+            if (origCanvas) {
                 const canvas = document.createElement('canvas');
                 canvas.width = origCanvas.width;
                 canvas.height = origCanvas.height;
@@ -91,12 +97,12 @@ window.studio.arrangement = (function(){
         tracks[trackIndex].segments.push(newSeg);
         segEl.addEventListener('click', e => {
             e.stopPropagation();
-            document.querySelectorAll('.arr-segment.selected').forEach(el=>el.classList.remove('selected'));
+            document.querySelectorAll('.arr-segment.selected').forEach(el => el.classList.remove('selected'));
             segEl.classList.add('selected');
-            window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex, segment: newSeg } }));
+            window.dispatchEvent(new CustomEvent('segmentSelected', {detail: {trackIndex, segment: newSeg}}));
         });
         makeDraggableResizable(segEl, newSeg, trackIndex);
-        return { el: segEl, segment: newSeg };
+        return {el: segEl, segment: newSeg};
     }
 
     // 监听鼓机编辑更新事件，实时更新缩略图
@@ -107,12 +113,12 @@ window.studio.arrangement = (function(){
         }
     });
 
-    function refreshArrangement(){
+    function refreshArrangement() {
         arrangementArea = document.querySelector('.arrangement-area');
         arrangementArea.innerHTML = '';
         tracks = [];
         const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
-        if(trackItems.length) {
+        if (trackItems.length) {
             const headerHeight = trackItems[0].getBoundingClientRect().height;
             document.documentElement.style.setProperty('--track-row-height', headerHeight + 'px');
         }
@@ -132,10 +138,10 @@ window.studio.arrangement = (function(){
             arrangementArea.appendChild(row);
 
             // enable paint-mode drum block creation
-            if(type === 'drum') {
-                row.addEventListener('mousedown', function(e) {
+            if (type === 'drum') {
+                row.addEventListener('mousedown', function (e) {
                     console.log('[debug] mousedown on drum row');
-                    if(!document.body.classList.contains('paint-mode')) return;
+                    if (!document.body.classList.contains('paint-mode')) return;
                     e.preventDefault();
                     const scrollContainer = document.querySelector('.studio-arrangement-scroll');
                     // use scroll container bounds to calculate correct positions when scrolled
@@ -147,22 +153,24 @@ window.studio.arrangement = (function(){
                     segEl.style.left = startSnap + 'px';
                     segEl.style.width = '0px';
                     row.appendChild(segEl);
+
                     function onMove(ev) {
                         console.log('[debug] mousemove on drum row');
                         ev.preventDefault();
                         const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
                         let snapX = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
                         let width = snapX - startSnap;
-                        if(width < 0) width = 0;
+                        if (width < 0) width = 0;
                         segEl.style.width = width + 'px';
                     }
+
                     function onUp(ev) {
                         console.log('[debug] mouseup on drum row');
                         document.removeEventListener('mousemove', onMove);
                         document.removeEventListener('mouseup', onUp);
                         const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
                         const endSnap = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
-                        if(endSnap > startSnap) {
+                        if (endSnap > startSnap) {
                             segEl.style.width = (endSnap - startSnap) + 'px';
                             const segment = {
                                 start: startSnap / pxPerSec,
@@ -195,14 +203,20 @@ window.studio.arrangement = (function(){
                                     segEl.remove();
                                 } else {
                                     // deselect other blocks
-                                    document.querySelectorAll('.arr-segment.drum-block.selected').forEach(el=>el.classList.remove('selected'));
+                                    document.querySelectorAll('.arr-segment.drum-block.selected').forEach(el => el.classList.remove('selected'));
                                     segEl.classList.add('selected');
                                     // select corresponding track-item
                                     const items = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
-                                    items.forEach(i=>i.classList.remove('selected'));
-                                    const ti = items[trackIndex]; if(ti) ti.classList.add('selected');
+                                    items.forEach(i => i.classList.remove('selected'));
+                                    const ti = items[trackIndex];
+                                    if (ti) ti.classList.add('selected');
                                     // notify bottom panel
-                                    window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex, segment } }));
+                                    window.dispatchEvent(new CustomEvent('segmentSelected', {
+                                        detail: {
+                                            trackIndex,
+                                            segment
+                                        }
+                                    }));
                                 }
                             });
                             // enable dragging and resizing in select-mode
@@ -215,58 +229,92 @@ window.studio.arrangement = (function(){
                             row.removeChild(segEl);
                         }
                     }
+
                     document.addEventListener('mousemove', onMove);
                     document.addEventListener('mouseup', onUp);
                 });
             }
             // enable paint-mode instrument block creation
-            else if(isInstrument) {
-                row.addEventListener('mousedown', function(e) {
-                    if(!document.body.classList.contains('paint-mode')) return;
+            else if (isInstrument) {
+                row.addEventListener('mousedown', function (e) {
+                    if (!document.body.classList.contains('paint-mode')) return;
                     e.preventDefault();
                     const scrollContainer = document.querySelector('.studio-arrangement-scroll');
                     const rect = scrollContainer.getBoundingClientRect();
                     const startX = e.clientX - rect.left + scrollContainer.scrollLeft;
+                    const startSnap = Math.round(startX / currentPxPerBeat) * currentPxPerBeat;
                     const segEl = document.createElement('div');
                     segEl.className = 'arr-segment instrument-block';
-                    segEl.style.left = startX + 'px';
-                    segEl.style.width = '100px'; // default width
+                    segEl.style.left = startSnap + 'px';
+                    segEl.style.width = '0px';
                     row.appendChild(segEl);
-                    // finalize segment on click
-                    const segment = {
-                        start: startX / pxPerSec,
-                        duration: 100 / pxPerSec,
-                        el: segEl,
-                        buffer: null,
-                        played: false,
-                        name: 'Instrument ' + instrumentBlockCounter,
-                        number: instrumentBlockCounter
-                    };
-                    instrumentBlockCounter++;
-                    const numSpan = document.createElement('span');
-                    numSpan.className = 'instrument-block-number';
-                    numSpan.textContent = segment.number;
-                    segEl.appendChild(numSpan);
-                    tracks[idx].segments.push(segment);
-                    segEl.segment = segment;
-                    segEl.addEventListener('click', function(ev) {
-                        ev.stopPropagation();
-                        document.querySelectorAll('.arr-segment.instrument-block.selected').forEach(el=>el.classList.remove('selected'));
-                        segEl.classList.add('selected');
-                        window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex: idx, segment } }));
-                    });
-                    makeDraggableResizable(segEl, segment, idx);
+
+                    function onMove(ev) {
+                        ev.preventDefault();
+                        const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
+                        let snapX = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
+                        let width = snapX - startSnap;
+                        if (width < 0) width = 0;
+                        segEl.style.width = width + 'px';
+                    }
+
+                    function onUp(ev) {
+                        document.removeEventListener('mousemove', onMove);
+                        document.removeEventListener('mouseup', onUp);
+                        const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
+                        const endSnap = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
+                        if (endSnap > startSnap) {
+                            segEl.style.width = (endSnap - startSnap) + 'px';
+                            const segment = {
+                                start: startSnap / pxPerSec,
+                                duration: (endSnap - startSnap) / pxPerSec,
+                                el: segEl,
+                                buffer: null,
+                                played: false,
+                                name: 'Instrument ' + instrumentBlockCounter,
+                                number: instrumentBlockCounter
+                            };
+                            instrumentBlockCounter++;
+                            const numSpan = document.createElement('span');
+                            numSpan.className = 'instrument-block-number';
+                            numSpan.textContent = segment.number;
+                            segEl.appendChild(numSpan);
+                            tracks[idx].segments.push(segment);
+                            segEl.segment = segment;
+                            segEl.addEventListener('click', function (ev) {
+                                ev.stopPropagation();
+                                document.querySelectorAll('.arr-segment.instrument-block.selected').forEach(el => el.classList.remove('selected'));
+                                segEl.classList.add('selected');
+                                window.dispatchEvent(new CustomEvent('segmentSelected', {
+                                    detail: {
+                                        trackIndex: idx,
+                                        segment
+                                    }
+                                }));
+                            });
+                            makeDraggableResizable(segEl, segment, idx);
+                        } else {
+                            row.removeChild(segEl);
+                        }
+                    }
+
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
                 });
             }
         });
         // sync vertical scroll between track panel and arrangement
         const trackScroll = document.querySelector('.studio-track-scroll');
         const arrangeScroll = document.querySelector('.studio-arrangement-scroll');
-        trackScroll.addEventListener('scroll', () => { arrangeScroll.scrollTop = trackScroll.scrollTop; });
-        arrangeScroll.addEventListener('scroll', () => { trackScroll.scrollTop = arrangeScroll.scrollTop; });
+        trackScroll.addEventListener('scroll', () => {
+            arrangeScroll.scrollTop = trackScroll.scrollTop;
+        });
+        arrangeScroll.addEventListener('scroll', () => {
+            trackScroll.scrollTop = arrangeScroll.scrollTop;
+        });
         initPlayhead();
         initTimeline();
-        setPosition(currentPos/pxPerSec); // restore position
+        setPosition(currentPos / pxPerSec); // restore position
 
         // --- 保证所有 drum-block 都有编号 ---
         setTimeout(() => {
@@ -296,9 +344,9 @@ window.studio.arrangement = (function(){
         });
     }
 
-    function initPlayhead(){
+    function initPlayhead() {
         const scroll = document.querySelector('.studio-arrangement-scroll');
-        if(playheadEl) playheadEl.remove();
+        if (playheadEl) playheadEl.remove();
         playheadEl = document.createElement('div');
         playheadEl.className = 'playhead';
         playheadEl.style.position = 'absolute';
@@ -317,6 +365,7 @@ window.studio.arrangement = (function(){
             const scrollArea = document.querySelector('.studio-arrangement-scroll');
             phStartX = e.clientX;
             phOrigLeft = parseFloat(playheadEl.style.left);
+
             function onMove(ev) {
                 let dx = ev.clientX - phStartX;
                 let newLeft = phOrigLeft + dx;
@@ -324,23 +373,25 @@ window.studio.arrangement = (function(){
                 const max = scrollArea.scrollWidth;
                 newLeft = Math.max(0, Math.min(newLeft, max));
                 // snap to nearest beat line if within threshold
-                if(currentPxPerBeat > 0) {
+                if (currentPxPerBeat > 0) {
                     const snapLine = Math.round(newLeft / currentPxPerBeat) * currentPxPerBeat;
-                    if(Math.abs(snapLine - newLeft) <= snapThreshold) newLeft = snapLine;
+                    if (Math.abs(snapLine - newLeft) <= snapThreshold) newLeft = snapLine;
                 }
                 playheadEl.style.left = newLeft + 'px';
                 currentPos = newLeft;
                 // update timer
                 const sec = currentPos / pxPerSec;
-                const h = String(Math.floor(sec/3600)).padStart(2,'0');
-                const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
-                const s = String(Math.floor(sec%60)).padStart(2,'0');
+                const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+                const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+                const s = String(Math.floor(sec % 60)).padStart(2, '0');
                 document.querySelector('.studio-timer').textContent = `${h}:${m}:${s}`;
             }
+
             function onUp() {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
             }
+
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
         });
@@ -352,7 +403,7 @@ window.studio.arrangement = (function(){
             playheadEl.style.left = `${currentPos}px`;
         }
         // Trigger playheadMoved event
-        window.dispatchEvent(new CustomEvent('playheadMoved', { detail: { position: currentPos } }));
+        window.dispatchEvent(new CustomEvent('playheadMoved', {detail: {position: currentPos}}));
     }
 
     function startPlayback() {
@@ -367,11 +418,11 @@ window.studio.arrangement = (function(){
         clearInterval(playheadTimer);
     }
 
-    function startPlayhead(){
-        if(isPlaying) return;
+    function startPlayhead() {
+        if (isPlaying) return;
         activeSources = []; // clear previous sources
         isPlaying = true;
-        if(audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         tracks.forEach(t => t.segments.forEach(s => s.played = false));
         playheadTimer = setInterval(() => {
             // adjust speed based on BPM input
@@ -382,43 +433,48 @@ window.studio.arrangement = (function(){
             updatePlayheadPosition(newPos);
             if (window.metronomeOn && typeof window.tickMetronome === 'function') window.tickMetronome(currentPos / pxPerSec);
             checkPlaySegments(currentPos / pxPerSec);
-        }, 1000/60);
+        }, 1000 / 60);
     }
 
-    function stopPlayhead(){
+    function stopPlayhead() {
         clearInterval(playheadTimer);
         // stop all currently playing audio sources immediately
-        activeSources.forEach(src => { try { src.stop(0); } catch(e) {} });
+        activeSources.forEach(src => {
+            try {
+                src.stop(0);
+            } catch (e) {
+            }
+        });
         activeSources = [];
         isPlaying = false;
         if (typeof window.resetMetronome === 'function') window.resetMetronome();
     }
 
-    function resetPlayhead(){
+    function resetPlayhead() {
         stopPlayhead();
         currentPos = 0;
-        if(playheadEl) playheadEl.style.left = '0';
+        if (playheadEl) playheadEl.style.left = '0';
         if (typeof window.resetMetronome === 'function') window.resetMetronome();
     }
 
-    function resizePlayhead(){
+    function resizePlayhead() {
         const scroll = document.querySelector('.studio-arrangement-scroll');
-        if(playheadEl && scroll) {
+        if (playheadEl && scroll) {
             playheadEl.style.height = scroll.scrollHeight + 'px';
         }
     }
 
-    function checkPlaySegments(time){
+    function checkPlaySegments(time) {
         const soloExists = tracks.some(t => t.solo);
         tracks.forEach(track => {
             // skip tracks based on solo/mute state
-            if(soloExists ? !track.solo : track.muted) return;
+            if (soloExists ? !track.solo : track.muted) return;
             track.segments.forEach(seg => {
-                if(!seg.played && time >= seg.start && time <= seg.start + seg.duration){
+                if (!seg.played && time >= seg.start && time <= seg.start + seg.duration) {
                     // handle drum-block segments via drum machine control
-                    if(seg.el && seg.el.classList.contains('drum-block')){
-                        if(window.playDrumMachine) window.playDrumMachine();
-                    } else if(seg.buffer){
+                    if (seg.el && seg.el.classList.contains('drum-block')) {
+                        if (window.playDrumMachine) window.playDrumMachine();
+                    } else if (seg.buffer) {
                         const src = audioCtx.createBufferSource();
                         src.buffer = seg.buffer;
                         // adjust playback rate per current BPM
@@ -432,8 +488,8 @@ window.studio.arrangement = (function(){
                     seg.played = true;
                 }
                 // pause drum-machine when playhead exits segment
-                if(seg.played && seg.el && seg.el.classList.contains('drum-block') && time > seg.start + seg.duration){
-                    if(window.pauseDrumMachine) window.pauseDrumMachine();
+                if (seg.played && seg.el && seg.el.classList.contains('drum-block') && time > seg.start + seg.duration) {
+                    if (window.pauseDrumMachine) window.pauseDrumMachine();
                     // allow replay if needed
                     seg.played = false;
                 }
@@ -442,7 +498,7 @@ window.studio.arrangement = (function(){
     }
 
     // add waveform block at optional offset (in seconds)
-    function addWaveformBlock(trackIndex, url, blob, offset = 0){
+    function addWaveformBlock(trackIndex, url, blob, offset = 0) {
         const track = tracks[trackIndex];
         const segment = {start: offset, duration: 0, el: null, buffer: null, played: false};
         track.segments.push(segment);
@@ -475,12 +531,12 @@ window.studio.arrangement = (function(){
             ctx.strokeStyle = '#fff';
             const step = Math.ceil(raw.length / width);
             const amp = canvas.height / 2;
-            for(let x=0; x<width; x++){
+            for (let x = 0; x < width; x++) {
                 let min = 1.0, max = -1.0;
-                for(let i=0; i<step; i++){
-                    const datum = raw[x*step + i];
-                    if(datum < min) min = datum;
-                    if(datum > max) max = datum;
+                for (let i = 0; i < step; i++) {
+                    const datum = raw[x * step + i];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
                 }
                 const yLow = (1 + min) * amp;
                 const yHigh = (1 + max) * amp;
@@ -504,69 +560,77 @@ window.studio.arrangement = (function(){
                 segEl.remove();
             } else {
                 segEl.classList.toggle('selected');
-                window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex, segment } }));
+                window.dispatchEvent(new CustomEvent('segmentSelected', {detail: {trackIndex, segment}}));
             }
         });
         makeDraggableResizable(segEl, segment, trackIndex);
     }
 
-    function makeDraggableResizable(el, segment, trackIndex){
+    function makeDraggableResizable(el, segment, trackIndex) {
         let mode = null, startX = 0, origLeft = 0, origWidth = 0;
         el.addEventListener('mousedown', e => {
             // only allow drag/resize in select-mode
-            if(!document.body.classList.contains('select-mode')) return;
+            if (!document.body.classList.contains('select-mode')) return;
             e.preventDefault();
             // shift-drag to copy: only duplicate, do not override original listener
-            if(e.shiftKey){
+            if (e.shiftKey) {
                 e.preventDefault();
                 const {el: newEl, segment: newSegment} = duplicateSegment(trackIndex, segment);
                 // initialize dragging for the new element
                 let startX = e.clientX;
                 let origLeft = parseFloat(newEl.style.left);
+
                 function onMove(ev) {
                     const dx = ev.clientX - startX;
                     let rawLeft = origLeft + dx;
                     const parentW = newEl.parentElement.getBoundingClientRect().width;
-                    if(newEl.classList.contains('drum-block')) {
+                    if (newEl.classList.contains('drum-block')) {
                         let newLeft = Math.round(rawLeft / currentPxPerBeat) * currentPxPerBeat;
                         newLeft = Math.max(0, Math.min(newLeft, parentW - parseFloat(newEl.style.width)));
                         let overlap = false;
                         tracks[trackIndex].segments.forEach(s => {
-                            if(s === newSegment) return;
+                            if (s === newSegment) return;
                             const oL = parseFloat(s.el.style.left);
                             const oR = oL + parseFloat(s.el.style.width);
-                            if(newLeft < oR && newLeft + parseFloat(newEl.style.width) > oL) overlap = true;
+                            if (newLeft < oR && newLeft + parseFloat(newEl.style.width) > oL) overlap = true;
                         });
-                        if(!overlap) {
+                        if (!overlap) {
                             newEl.style.left = newLeft + 'px';
                             newSegment.start = newLeft / pxPerSec;
                         }
                     } else {
                         let newLeft = rawLeft;
-                        if(currentPxPerBeat > 0) {
+                        if (currentPxPerBeat > 0) {
                             const snapLine = Math.round(rawLeft / currentPxPerBeat) * currentPxPerBeat;
-                            if(Math.abs(snapLine - rawLeft) <= snapThreshold) newLeft = snapLine;
+                            if (Math.abs(snapLine - rawLeft) <= snapThreshold) newLeft = snapLine;
                         }
                         newLeft = Math.max(0, Math.min(newLeft, parentW - parseFloat(newEl.style.width)));
                         newEl.style.left = newLeft + 'px';
                         newSegment.start = newLeft / pxPerSec;
                         let overlapUi = false;
                         tracks[trackIndex].segments.forEach(s => {
-                            if(s === newSegment || !s.el.classList.contains('waveform-block')) return;
+                            if (s === newSegment || !s.el.classList.contains('waveform-block')) return;
                             const oL = parseFloat(s.el.style.left);
                             const oR = oL + parseFloat(s.el.style.width);
-                            if(newLeft < oR && newLeft + parseFloat(newEl.style.width) > oL) overlapUi = true;
+                            if (newLeft < oR && newLeft + parseFloat(newEl.style.width) > oL) overlapUi = true;
                         });
-                        if(overlapUi) newEl.classList.add('overlap'); else newEl.classList.remove('overlap');
+                        if (overlapUi) newEl.classList.add('overlap'); else newEl.classList.remove('overlap');
                     }
                 }
+
                 function onUp() {
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onUp);
-                    if(newEl.classList.contains('drum-block')) {
-                        window.dispatchEvent(new CustomEvent('segmentUpdated', { detail: { trackIndex, segment: newSegment } }));
+                    if (newEl.classList.contains('drum-block')) {
+                        window.dispatchEvent(new CustomEvent('segmentUpdated', {
+                            detail: {
+                                trackIndex,
+                                segment: newSegment
+                            }
+                        }));
                     }
                 }
+
                 document.addEventListener('mousemove', onMove);
                 document.addEventListener('mouseup', onUp);
                 return;
@@ -575,21 +639,22 @@ window.studio.arrangement = (function(){
             origLeft = parseFloat(el.style.left);
             origWidth = parseFloat(el.style.width);
             const localX = e.offsetX;
-            if(localX < 10) mode = 'resize-left';
-            else if(localX > origWidth - 10) mode = 'resize-right';
+            if (localX < 10) mode = 'resize-left';
+            else if (localX > origWidth - 10) mode = 'resize-right';
             else mode = 'move';
-            function onMove(ev){
+
+            function onMove(ev) {
                 const dx = ev.clientX - startX;
-                if(mode === 'move'){
+                if (mode === 'move') {
                     const rawLeft = origLeft + dx;
                     let newLeft = rawLeft;
                     // clamp within container
                     const parentW = el.parentElement.getBoundingClientRect().width;
-                    if(el.classList.contains('waveform-block')){
+                    if (el.classList.contains('waveform-block')) {
                         // free move with magnetic snap for waveform
-                        if(currentPxPerBeat > 0) {
+                        if (currentPxPerBeat > 0) {
                             const snapLine = Math.round(rawLeft / currentPxPerBeat) * currentPxPerBeat;
-                            if(Math.abs(snapLine - rawLeft) <= snapThreshold) newLeft = snapLine;
+                            if (Math.abs(snapLine - rawLeft) <= snapThreshold) newLeft = snapLine;
                         }
                         newLeft = Math.max(0, Math.min(newLeft, parentW - origWidth));
                         // apply position
@@ -598,40 +663,43 @@ window.studio.arrangement = (function(){
                         // check overlap UI for waveform
                         let overlapUi = false;
                         tracks[trackIndex].segments.forEach(s => {
-                            if(s === segment || !s.el.classList.contains('waveform-block')) return;
+                            if (s === segment || !s.el.classList.contains('waveform-block')) return;
                             const oL = parseFloat(s.el.style.left);
                             const oR = oL + parseFloat(s.el.style.width);
-                            if(newLeft < oR && newLeft + origWidth > oL) overlapUi = true;
+                            if (newLeft < oR && newLeft + origWidth > oL) overlapUi = true;
                         });
-                        if(overlapUi) el.classList.add('overlap'); else el.classList.remove('overlap');
+                        if (overlapUi) el.classList.add('overlap'); else el.classList.remove('overlap');
                     } else {
                         // strict snap and no-overlap for drum blocks
                         newLeft = Math.round(rawLeft / currentPxPerBeat) * currentPxPerBeat;
                         newLeft = Math.max(0, Math.min(newLeft, parentW - origWidth));
                         let overlap = false;
-                        tracks[trackIndex].segments.forEach(s=>{
-                            if(s === segment) return;
+                        tracks[trackIndex].segments.forEach(s => {
+                            if (s === segment) return;
                             const oL = parseFloat(s.el.style.left);
                             const oR = oL + parseFloat(s.el.style.width);
-                            if(newLeft < oR && newLeft + origWidth > oL) overlap = true;
+                            if (newLeft < oR && newLeft + origWidth > oL) overlap = true;
                         });
-                        if(!overlap) {
+                        if (!overlap) {
                             el.style.left = newLeft + 'px';
                             segment.start = newLeft / pxPerSec;
                         }
                     }
-                } else if(mode === 'resize-right'){
+                } else if (mode === 'resize-right') {
                     let newW = origWidth + dx;
                     newW = Math.max(currentPxPerBeat, newW);
                     newW = Math.round(newW / currentPxPerBeat) * currentPxPerBeat;
                     el.style.width = newW + 'px';
                     segment.duration = newW / pxPerSec;
                     segment.beats = newW / currentPxPerBeat;
-                } else if(mode === 'resize-left'){
+                } else if (mode === 'resize-left') {
                     let newL = origLeft + dx;
                     let newW = origWidth - dx;
                     // clamp
-                    if(newL < 0){ newW += newL; newL = 0; }
+                    if (newL < 0) {
+                        newW += newL;
+                        newL = 0;
+                    }
                     newW = Math.max(currentPxPerBeat, newW);
                     newL = Math.round(newL / currentPxPerBeat) * currentPxPerBeat;
                     const delta = newL - origLeft;
@@ -643,14 +711,16 @@ window.studio.arrangement = (function(){
                     segment.beats = newW / currentPxPerBeat;
                 }
             }
-            function onUp(){
+
+            function onUp() {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
                 // notify that segment was updated (for live editor refresh)
-                if(el.classList.contains('drum-block')){
-                    window.dispatchEvent(new CustomEvent('segmentUpdated', { detail: { trackIndex, segment } }));
+                if (el.classList.contains('drum-block')) {
+                    window.dispatchEvent(new CustomEvent('segmentUpdated', {detail: {trackIndex, segment}}));
                 }
             }
+
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
         });
@@ -663,7 +733,7 @@ window.studio.arrangement = (function(){
             const sel = document.querySelector('.arr-segment.selected');
             if (sel && sel.segment) {
                 const idx = parseInt(sel.closest('.arrangement-track-row').dataset.index, 10);
-                clipboard = { trackIndex: idx, segment: sel.segment };
+                clipboard = {trackIndex: idx, segment: sel.segment};
             }
         }
         // CTRL+V
@@ -675,13 +745,13 @@ window.studio.arrangement = (function(){
     });
 
     // set playhead to specific time position
-    function setPosition(seconds){
+    function setPosition(seconds) {
         currentPos = seconds * pxPerSec;
-        if(playheadEl) playheadEl.style.left = currentPos + 'px';
+        if (playheadEl) playheadEl.style.left = currentPos + 'px';
     }
 
     // initialize timeline ticks and click-to-seek
-    function initTimeline(){
+    function initTimeline() {
         const wrapper = document.querySelector('.studio-timeline-wrapper');
         // grid uses default BPM
         const bpm = defaultBPM;
@@ -698,12 +768,12 @@ window.studio.arrangement = (function(){
         wrapper.innerHTML = '';
         wrapper.style.width = totalWidth + 'px';
         const area = document.querySelector('.arrangement-area');
-        if(area) {
+        if (area) {
             area.style.width = totalWidth + 'px';
             area.style.setProperty('--beat-width', (pxPerBar / beatsPerBar) + 'px');
             area.style.setProperty('--bar-width', pxPerBar + 'px');
         }
-        for(let i=0; i<numBars; i++){
+        for (let i = 0; i < numBars; i++) {
             const tick = document.createElement('div');
             tick.className = 'timeline-tick';
             tick.style.left = (i * pxPerBar) + 'px';
@@ -716,22 +786,26 @@ window.studio.arrangement = (function(){
             const rect = wrapper.getBoundingClientRect();
             let x = e.clientX - rect.left;
             // snap to nearest beat line if within threshold
-            if(currentPxPerBeat > 0) {
+            if (currentPxPerBeat > 0) {
                 const snapLine = Math.round(x / currentPxPerBeat) * currentPxPerBeat;
-                if(Math.abs(snapLine - x) <= snapThreshold) x = snapLine;
+                if (Math.abs(snapLine - x) <= snapThreshold) x = snapLine;
             }
             setPosition(x / pxPerSec);
             // update timer display
             const sec = currentPos / pxPerSec;
-            const h = String(Math.floor(sec/3600)).padStart(2,'0');
-            const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
-            const s = String(Math.floor(sec%60)).padStart(2,'0');
+            const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+            const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+            const s = String(Math.floor(sec % 60)).padStart(2, '0');
             document.querySelector('.studio-timer').textContent = `${h}:${m}:${s}`;
         });
         // sync scrolling
         const arrScroll = document.querySelector('.studio-arrangement-scroll');
-        timelineScroll.addEventListener('scroll', () => { arrScroll.scrollLeft = timelineScroll.scrollLeft; });
-        arrScroll.addEventListener('scroll', () => { timelineScroll.scrollLeft = arrScroll.scrollLeft; });
+        timelineScroll.addEventListener('scroll', () => {
+            arrScroll.scrollLeft = timelineScroll.scrollLeft;
+        });
+        arrScroll.addEventListener('scroll', () => {
+            timelineScroll.scrollLeft = arrScroll.scrollLeft;
+        });
         // enable drag anywhere on time-scroll
         timelineScroll.addEventListener('mousedown', e => {
             e.preventDefault();
@@ -740,33 +814,38 @@ window.studio.arrangement = (function(){
             const totalW = rect.width;
             let startX = e.clientX;
             let origLeft = currentPos;
+
             function onMove(ev) {
                 let x = ev.clientX - rect.left;
                 x = Math.max(0, Math.min(x, totalW));
                 // snap to nearest beat
-                if(currentPxPerBeat > 0) {
+                if (currentPxPerBeat > 0) {
                     const snapLine = Math.round(x / currentPxPerBeat) * currentPxPerBeat;
-                    if(Math.abs(snapLine - x) <= snapThreshold) x = snapLine;
+                    if (Math.abs(snapLine - x) <= snapThreshold) x = snapLine;
                 }
                 playheadEl.style.left = x + 'px';
                 currentPos = x;
                 // update timer
                 const sec = currentPos / pxPerSec;
-                const h = String(Math.floor(sec/3600)).padStart(2,'0');
-                const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
-                const s = String(Math.floor(sec%60)).padStart(2,'0');
+                const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+                const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+                const s = String(Math.floor(sec % 60)).padStart(2, '0');
                 document.querySelector('.studio-timer').textContent = `${h}:${m}:${s}`;
             }
+
             function onUp() {
                 document.removeEventListener('mousemove');
                 document.removeEventListener('mouseup');
             }
+
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
         });
     }
 
-    function getCurrentTime(){ return currentPos / pxPerSec; }
+    function getCurrentTime() {
+        return currentPos / pxPerSec;
+    }
 
     // add a single new track row without clearing existing tracks
     function addTrackRow(type) {
@@ -786,10 +865,10 @@ window.studio.arrangement = (function(){
         row.style.position = 'relative';
         arrangementArea.appendChild(row);
         // enable paint-mode drum block creation for new row
-        if(type === 'drum') {
-            row.addEventListener('mousedown', function(e) {
+        if (type === 'drum') {
+            row.addEventListener('mousedown', function (e) {
                 console.log('[debug] mousedown on drum row');
-                if(!document.body.classList.contains('paint-mode')) return;
+                if (!document.body.classList.contains('paint-mode')) return;
                 e.preventDefault();
                 const scrollContainer = document.querySelector('.studio-arrangement-scroll');
                 // use scroll container bounds to calculate correct positions when scrolled
@@ -801,24 +880,32 @@ window.studio.arrangement = (function(){
                 segEl.style.left = startSnap + 'px';
                 segEl.style.width = '0px';
                 row.appendChild(segEl);
+
                 function onMove(ev) {
                     console.log('[debug] mousemove on drum row');
                     ev.preventDefault();
                     const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
                     let snapX = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
                     let width = snapX - startSnap;
-                    if(width < 0) width = 0;
+                    if (width < 0) width = 0;
                     segEl.style.width = width + 'px';
                 }
+
                 function onUp(ev) {
                     console.log('[debug] mouseup on drum row');
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onUp);
                     const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
                     const endSnap = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
-                    if(endSnap > startSnap) {
+                    if (endSnap > startSnap) {
                         segEl.style.width = (endSnap - startSnap) + 'px';
-                        const segment = { start: startSnap / pxPerSec, duration: (endSnap - startSnap) / pxPerSec, el: segEl, buffer: null, played: false };
+                        const segment = {
+                            start: startSnap / pxPerSec,
+                            duration: (endSnap - startSnap) / pxPerSec,
+                            el: segEl,
+                            buffer: null,
+                            played: false
+                        };
                         segment.beats = (endSnap - startSnap) / currentPxPerBeat;
                         tracks[idx].segments.push(segment);
                         segEl.addEventListener('click', e => {
@@ -831,12 +918,18 @@ window.studio.arrangement = (function(){
                                 if (i > -1) arr.splice(i, 1);
                                 segEl.remove();
                             } else {
-                                document.querySelectorAll('.arr-segment.drum-block.selected').forEach(el=>el.classList.remove('selected'));
+                                document.querySelectorAll('.arr-segment.drum-block.selected').forEach(el => el.classList.remove('selected'));
                                 segEl.classList.add('selected');
                                 const items = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
-                                items.forEach(i=>i.classList.remove('selected'));
-                                const ti = items[trackIndex]; if(ti) ti.classList.add('selected');
-                                window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex, segment } }));
+                                items.forEach(i => i.classList.remove('selected'));
+                                const ti = items[trackIndex];
+                                if (ti) ti.classList.add('selected');
+                                window.dispatchEvent(new CustomEvent('segmentSelected', {
+                                    detail: {
+                                        trackIndex,
+                                        segment
+                                    }
+                                }));
                             }
                         });
                         makeDraggableResizable(segEl, segment, idx);
@@ -844,47 +937,77 @@ window.studio.arrangement = (function(){
                         row.removeChild(segEl);
                     }
                 }
+
                 document.addEventListener('mousemove', onMove);
                 document.addEventListener('mouseup', onUp);
             });
         }
         // enable paint-mode instrument block creation for new row
-        else if(type === 'piano') {
-            row.addEventListener('mousedown', function(e) {
-                if(!document.body.classList.contains('paint-mode')) return;
+        else if (type === 'piano') {
+            row.addEventListener('mousedown', function (e) {
+                if (!document.body.classList.contains('paint-mode')) return;
                 e.preventDefault();
                 const scrollContainer = document.querySelector('.studio-arrangement-scroll');
                 const rect = scrollContainer.getBoundingClientRect();
                 const startX = e.clientX - rect.left + scrollContainer.scrollLeft;
+                const startSnap = Math.round(startX / currentPxPerBeat) * currentPxPerBeat;
                 const segEl = document.createElement('div');
                 segEl.className = 'arr-segment instrument-block';
-                segEl.style.left = startX + 'px';
-                segEl.style.width = '100px'; // default width
+                segEl.style.left = startSnap + 'px';
+                segEl.style.width = '0px';
                 row.appendChild(segEl);
-                // finalize segment on click
-                const segment = {
-                    start: startX / pxPerSec,
-                    duration: 100 / pxPerSec,
-                    el: segEl,
-                    buffer: null,
-                    played: false,
-                    name: 'Instrument ' + instrumentBlockCounter,
-                    number: instrumentBlockCounter
-                };
-                instrumentBlockCounter++;
-                const numSpan = document.createElement('span');
-                numSpan.className = 'instrument-block-number';
-                numSpan.textContent = segment.number;
-                segEl.appendChild(numSpan);
-                tracks[idx].segments.push(segment);
-                segEl.segment = segment;
-                segEl.addEventListener('click', function(ev) {
-                    ev.stopPropagation();
-                    document.querySelectorAll('.arr-segment.instrument-block.selected').forEach(el=>el.classList.remove('selected'));
-                    segEl.classList.add('selected');
-                    window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex: idx, segment } }));
-                });
-                makeDraggableResizable(segEl, segment, idx);
+
+                function onMove(ev) {
+                    ev.preventDefault();
+                    const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
+                    let snapX = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
+                    let width = snapX - startSnap;
+                    if (width < 0) width = 0;
+                    segEl.style.width = width + 'px';
+                }
+
+                function onUp(ev) {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    const mx = ev.clientX - rect.left + scrollContainer.scrollLeft;
+                    const endSnap = Math.round(mx / currentPxPerBeat) * currentPxPerBeat;
+                    if (endSnap > startSnap) {
+                        segEl.style.width = (endSnap - startSnap) + 'px';
+                        const segment = {
+                            start: startSnap / pxPerSec,
+                            duration: (endSnap - startSnap) / pxPerSec,
+                            el: segEl,
+                            buffer: null,
+                            played: false,
+                            name: 'Instrument ' + instrumentBlockCounter,
+                            number: instrumentBlockCounter
+                        };
+                        instrumentBlockCounter++;
+                        const numSpan = document.createElement('span');
+                        numSpan.className = 'instrument-block-number';
+                        numSpan.textContent = segment.number;
+                        segEl.appendChild(numSpan);
+                        tracks[idx].segments.push(segment);
+                        segEl.segment = segment;
+                        segEl.addEventListener('click', function (ev) {
+                            ev.stopPropagation();
+                            document.querySelectorAll('.arr-segment.instrument-block.selected').forEach(el => el.classList.remove('selected'));
+                            segEl.classList.add('selected');
+                            window.dispatchEvent(new CustomEvent('segmentSelected', {
+                                detail: {
+                                    trackIndex: idx,
+                                    segment
+                                }
+                            }));
+                        });
+                        makeDraggableResizable(segEl, segment, idx);
+                    } else {
+                        row.removeChild(segEl);
+                    }
+                }
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
             });
         }
         // adjust playhead height
@@ -893,17 +1016,17 @@ window.studio.arrangement = (function(){
 
     // move track at origIndex to newIndex, preserving segments
     function moveTrack(origIndex, newIndex) {
-        if(origIndex === newIndex) return;
+        if (origIndex === newIndex) return;
         // reorder data
         const track = tracks.splice(origIndex, 1)[0];
         tracks.splice(newIndex, 0, track);
         // reorder DOM rows
         const rows = Array.from(arrangementArea.querySelectorAll('.arrangement-track-row'));
         const moved = rows[origIndex];
-        if(moved) {
+        if (moved) {
             moved.remove();
             const before = rows[newIndex] && rows[newIndex] !== moved ? rows[newIndex] : null;
-            if(before) arrangementArea.insertBefore(moved, before);
+            if (before) arrangementArea.insertBefore(moved, before);
             else arrangementArea.appendChild(moved);
         }
         // update data-index
@@ -961,11 +1084,11 @@ window.studio.arrangement = (function(){
 
     // update gain nodes based on mute/solo/volume
     function updateGainStates() {
-        const soloExists = tracks.some(t=>t.solo);
-        tracks.forEach(t=>{
+        const soloExists = tracks.some(t => t.solo);
+        tracks.forEach(t => {
             let gainVal = t.volume;
-            if(soloExists) gainVal = t.solo ? t.volume : 0;
-            else if(t.muted) gainVal = 0;
+            if (soloExists) gainVal = t.solo ? t.volume : 0;
+            else if (t.muted) gainVal = 0;
             t.gainNode.gain.value = gainVal;
         });
     }
@@ -983,7 +1106,10 @@ window.studio.arrangement = (function(){
                 // 尝试从 tracks 中查找 segment
                 for (const t of tracks) {
                     const seg = t.segments.find(s => s.el === block);
-                    if (seg) { block.segment = seg; break; }
+                    if (seg) {
+                        block.segment = seg;
+                        break;
+                    }
                 }
             }
             const left = parseFloat(block.style.left);
@@ -996,24 +1122,24 @@ window.studio.arrangement = (function(){
             const blockStartSec = startPx / pxPerSec;
             const blockDurationSec = width / pxPerSec;
             // 判断playhead是否在block内
-            if(px >= startPx && px < endPx) {
+            if (px >= startPx && px < endPx) {
                 // 计算当前step和offset
                 const playheadSec = px / pxPerSec;
                 const offsetSec = playheadSec - blockStartSec;
                 const step = Math.floor((offsetSec / blockDurationSec) * totalSteps);
                 console.log('[drum-debug] playhead in drum-block step change:', step);
                 // 首次进入或步数变化时重启鼓机
-                if(!drumBlockPlaybackState || drumBlockPlaybackState.block !== block || drumBlockPlaybackState.step !== step) {
-                    if(window.studioDrumMachineControl) {
+                if (!drumBlockPlaybackState || drumBlockPlaybackState.block !== block || drumBlockPlaybackState.step !== step) {
+                    if (window.studioDrumMachineControl) {
                         console.log('[drum-debug] playFromStep', step, offsetSec, bpm, totalSteps);
                         window.studioDrumMachineControl.playFromStep(step, offsetSec, bpm, totalSteps);
-                        drumBlockPlaybackState = { block, step };
+                        drumBlockPlaybackState = {block, step};
                     }
                 }
             } else {
                 // 鼓块外，若正在播放则停止
-                if(drumBlockPlaybackState && drumBlockPlaybackState.block === block) {
-                    if(window.studioDrumMachineControl) {
+                if (drumBlockPlaybackState && drumBlockPlaybackState.block === block) {
+                    if (window.studioDrumMachineControl) {
                         console.log('[drum-debug] 调用stop');
                         window.studioDrumMachineControl.stop();
                     }
@@ -1023,5 +1149,26 @@ window.studio.arrangement = (function(){
         });
     });
 
-    return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo, setTrackVolume, setTrackPan, armTrack, getTrackSettings, updateGainStates, updatePlayheadPosition, startPlayback, stopPlayback};
+    return {
+        refreshArrangement,
+        startPlayhead,
+        stopPlayhead,
+        resetPlayhead,
+        resizePlayhead,
+        addWaveformBlock,
+        setPosition,
+        getCurrentTime,
+        addTrackRow,
+        moveTrack,
+        setTrackMute,
+        setTrackSolo,
+        setTrackVolume,
+        setTrackPan,
+        armTrack,
+        getTrackSettings,
+        updateGainStates,
+        updatePlayheadPosition,
+        startPlayback,
+        stopPlayback
+};
 })();

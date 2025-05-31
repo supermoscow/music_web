@@ -81,14 +81,14 @@ window.studio.bottom = (function() {
                     // switch editor content based on segment type
                     if (currentSegment && currentSegment.segment && currentSegment.segment.el.classList.contains('instrument-block')) {
                         if (typeof window.renderInstrumentEditor === 'function') {
-                            window.renderInstrumentEditor(currentSegment);
+                            window.renderInstrumentEditor(bottomContent); // 修正：传递编辑区容器
                         } else {
                             bottomContent.innerHTML = '<div style="color:red">乐器编辑器加载失败</div>';
                         }
                     } else {
                         // default to drum machine editor
                         if (window.renderDrumMachineEditor) {
-                            window.renderDrumMachineEditor(currentSegment);
+                            window.renderDrumMachineEditor(bottomContent); // 也建议修正为传递容器
                         } else {
                             console.error('renderDrumMachineEditor 未定义，请检查 drum_machine.js 是否已正确加载');
                             bottomContent.innerHTML = '<div style="color:red">鼓机模块加载失败</div>';

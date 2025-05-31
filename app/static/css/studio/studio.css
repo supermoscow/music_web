@@ -1,3 +1,4 @@
+/* ...existing code... */
 /* studio.css 基础布局和样式 */
 :root {
     --track-row-height: 100px; /* uniform height for track rows */
@@ -289,6 +290,25 @@ body {
     z-index: 10;
 }
 /* Highlight selected drum-block in arrangement */
+.arr-segment.instrument-block {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid #4caf50;
+    position: absolute;
+    overflow: hidden;
+}
+.arr-segment.instrument-block.selected {
+    outline: 2px solid #3CB371;
+}
+.instrument-block-number {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 1px 4px;
+    font-size: 10px;
+    border-radius: 2px;
+    z-index: 10;
+}
 .studio-sound-library {
     width: 120px;
     background: #23272a;
@@ -620,3 +640,136 @@ body.delete-mode .waveform-block:hover {
     display: block;
 }
 
+/* Piano Roll Editor Styles */
+.piano-roll-editor {
+    display: flex;
+    flex-direction: column;
+    height: 320px;
+    background: #23272a;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    position: relative;
+}
+.piano-roll-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #292d30;
+    border-bottom: 1px solid #333;
+}
+.piano-roll-toolbar button {
+    background: #444;
+    border: none;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+.piano-roll-toolbar button.active {
+    background: #7289da;
+    color: #fff;
+}
+.piano-roll-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    align-items: stretch;
+}
+.piano-keys {
+    width: 48px;
+    background: #23272a;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+    z-index: 2;
+    user-select: none;
+    height: 100%;
+    overflow: hidden;
+    scrollbar-width: thin;
+}
+.piano-key {
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    height: 20px;
+    line-height: 20px;
+    font-size: 14px;
+    margin: 0;
+    box-sizing: border-box;
+    border: 1px solid #bbb;
+    background: #fff;
+    color: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.piano-key.black {
+    background: #222;
+    color: #fff;
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+}
+.piano-roll-grid {
+    flex: 1;
+    overflow: auto;
+    background: #181a1b;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    scrollbar-width: thin;
+}
+.piano-roll-row {
+    display: flex;
+    height: 20px;
+    flex-shrink: 0;
+}
+.piano-roll-cell {
+    width: 24px;
+    height: 100%;
+    border-right: 1px solid #292d30;
+    border-bottom: 1px solid #292d30;
+    background: transparent;
+    position: relative;
+    box-sizing: border-box;
+}
+.piano-roll-cell.beat {
+    background: rgba(255,255,255,0.04);
+}
+.piano-roll-cell.bar {
+    background: rgba(255,255,255,0.08);
+}
+.piano-roll-note {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 0;
+    border-radius: 4px;
+    background: #7289da;
+    opacity: 0.95;
+    z-index: 5;
+    pointer-events: auto;
+    border: 1px solid #3CB371;
+}
+.piano-roll-note.selected {
+    outline: 2px solid #fff;
+}
+.piano-roll-playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #ff5252;
+    z-index: 10;
+    pointer-events: none;
+    transition: left 0.05s linear;
+}
