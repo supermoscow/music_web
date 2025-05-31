@@ -11,6 +11,8 @@ window.studio.arrangement = (function(){
     let currentPxPerBar = 0;
     let currentPxPerBeat = 0; // spacing for beats
     let drumBlockCounter = 1; // counter for drum-block numbering
+    let instrumentBlockCounter = 1; // counter for instrument-block numbering
+    let clipboard = null; // store copied segment
 
     // 新增：生成鼓机缩略图的函数
     function generateDrumThumbnail(el, segment) {
@@ -26,7 +28,7 @@ window.studio.arrangement = (function(){
         // 分辨率: 列数 x 行数，对应每个step一个像素
         canvas.width = cols;
         canvas.height = rows;
-        // css拉伸至父容器大小，像素渲染
+        // css拉伸至父容器大小，像素���染
         canvas.style.width = '100%';
         canvas.style.height = '100%';
         const ctx = canvas.getContext('2d');
@@ -41,6 +43,60 @@ window.studio.arrangement = (function(){
             }
         }
         el.appendChild(canvas);
+    }
+
+    // duplicate a segment (drum-block or waveform-block)
+    function duplicateSegment(trackIndex, originalSeg) {
+        const pasteStart = originalSeg.start;
+        const type = originalSeg.el.classList.contains('drum-block') ? 'drum-block' : originalSeg.el.classList.contains('instrument-block') ? 'instrument-block' : 'waveform-block';
+        const row = document.querySelector(`.arrangement-track-row[data-index='${trackIndex}']`);
+        const segEl = document.createElement('div');
+        segEl.className = 'arr-segment ' + type;
+        const leftPx = pasteStart * pxPerSec;
+        const widthPx = originalSeg.duration * pxPerSec;
+        segEl.style.left = leftPx + 'px';
+        segEl.style.width = widthPx + 'px';
+        row.appendChild(segEl);
+        const newSeg = { start: pasteStart, duration: originalSeg.duration, el: segEl, buffer: originalSeg.buffer, played: false };
+        if(type === 'drum-block') {
+            newSeg.beats = originalSeg.beats;
+            newSeg.name = originalSeg.name + ' copy';
+            newSeg.number = drumBlockCounter++;
+            segEl.segment = newSeg;
+            const numSpan = document.createElement('span');
+            numSpan.className = 'drum-block-number';
+            numSpan.textContent = newSeg.number;
+            segEl.appendChild(numSpan);
+            generateDrumThumbnail(segEl, newSeg);
+        } else if(type === 'instrument-block') {
+            newSeg.name = originalSeg.name + ' copy';
+            newSeg.number = instrumentBlockCounter++;
+            segEl.segment = newSeg;
+            const numSpan = document.createElement('span');
+            numSpan.className = 'instrument-block-number';
+            numSpan.textContent = newSeg.number;
+            segEl.appendChild(numSpan);
+        } else {
+            // clone waveform canvas if present
+            const origCanvas = originalSeg.el.querySelector('canvas');
+            if(origCanvas) {
+                const canvas = document.createElement('canvas');
+                canvas.width = origCanvas.width;
+                canvas.height = origCanvas.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(origCanvas, 0, 0);
+                segEl.appendChild(canvas);
+            }
+        }
+        tracks[trackIndex].segments.push(newSeg);
+        segEl.addEventListener('click', e => {
+            e.stopPropagation();
+            document.querySelectorAll('.arr-segment.selected').forEach(el=>el.classList.remove('selected'));
+            segEl.classList.add('selected');
+            window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex, segment: newSeg } }));
+        });
+        makeDraggableResizable(segEl, newSeg, trackIndex);
+        return { el: segEl, segment: newSeg };
     }
 
     // 监听鼓机编辑更新事件，实时更新缩略图
@@ -62,6 +118,7 @@ window.studio.arrangement = (function(){
         }
         trackItems.forEach((item, idx) => {
             const type = item.dataset.type;
+            const isInstrument = (type === 'piano');
             const trackObj = {type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false};
             // create audio chain nodes for this track
             trackObj.gainNode = audioCtx.createGain();
@@ -81,7 +138,8 @@ window.studio.arrangement = (function(){
                     if(!document.body.classList.contains('paint-mode')) return;
                     e.preventDefault();
                     const scrollContainer = document.querySelector('.studio-arrangement-scroll');
-                    const rect = arrangementArea.getBoundingClientRect();
+                    // use scroll container bounds to calculate correct positions when scrolled
+                    const rect = scrollContainer.getBoundingClientRect();
                     const startX = e.clientX - rect.left + scrollContainer.scrollLeft;
                     const startSnap = Math.round(startX / currentPxPerBeat) * currentPxPerBeat;
                     const segEl = document.createElement('div');
@@ -159,6 +217,45 @@ window.studio.arrangement = (function(){
                     }
                     document.addEventListener('mousemove', onMove);
                     document.addEventListener('mouseup', onUp);
+                });
+            }
+            // enable paint-mode instrument block creation
+            else if(isInstrument) {
+                row.addEventListener('mousedown', function(e) {
+                    if(!document.body.classList.contains('paint-mode')) return;
+                    e.preventDefault();
+                    const scrollContainer = document.querySelector('.studio-arrangement-scroll');
+                    const rect = scrollContainer.getBoundingClientRect();
+                    const startX = e.clientX - rect.left + scrollContainer.scrollLeft;
+                    const segEl = document.createElement('div');
+                    segEl.className = 'arr-segment instrument-block';
+                    segEl.style.left = startX + 'px';
+                    segEl.style.width = '100px'; // default width
+                    row.appendChild(segEl);
+                    // finalize segment on click
+                    const segment = {
+                        start: startX / pxPerSec,
+                        duration: 100 / pxPerSec,
+                        el: segEl,
+                        buffer: null,
+                        played: false,
+                        name: 'Instrument ' + instrumentBlockCounter,
+                        number: instrumentBlockCounter
+                    };
+                    instrumentBlockCounter++;
+                    const numSpan = document.createElement('span');
+                    numSpan.className = 'instrument-block-number';
+                    numSpan.textContent = segment.number;
+                    segEl.appendChild(numSpan);
+                    tracks[idx].segments.push(segment);
+                    segEl.segment = segment;
+                    segEl.addEventListener('click', function(ev) {
+                        ev.stopPropagation();
+                        document.querySelectorAll('.arr-segment.instrument-block.selected').forEach(el=>el.classList.remove('selected'));
+                        segEl.classList.add('selected');
+                        window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex: idx, segment } }));
+                    });
+                    makeDraggableResizable(segEl, segment, idx);
                 });
             }
         });
@@ -419,6 +516,61 @@ window.studio.arrangement = (function(){
             // only allow drag/resize in select-mode
             if(!document.body.classList.contains('select-mode')) return;
             e.preventDefault();
+            // shift-drag to copy: only duplicate, do not override original listener
+            if(e.shiftKey){
+                e.preventDefault();
+                const {el: newEl, segment: newSegment} = duplicateSegment(trackIndex, segment);
+                // initialize dragging for the new element
+                let startX = e.clientX;
+                let origLeft = parseFloat(newEl.style.left);
+                function onMove(ev) {
+                    const dx = ev.clientX - startX;
+                    let rawLeft = origLeft + dx;
+                    const parentW = newEl.parentElement.getBoundingClientRect().width;
+                    if(newEl.classList.contains('drum-block')) {
+                        let newLeft = Math.round(rawLeft / currentPxPerBeat) * currentPxPerBeat;
+                        newLeft = Math.max(0, Math.min(newLeft, parentW - parseFloat(newEl.style.width)));
+                        let overlap = false;
+                        tracks[trackIndex].segments.forEach(s => {
+                            if(s === newSegment) return;
+                            const oL = parseFloat(s.el.style.left);
+                            const oR = oL + parseFloat(s.el.style.width);
+                            if(newLeft < oR && newLeft + parseFloat(newEl.style.width) > oL) overlap = true;
+                        });
+                        if(!overlap) {
+                            newEl.style.left = newLeft + 'px';
+                            newSegment.start = newLeft / pxPerSec;
+                        }
+                    } else {
+                        let newLeft = rawLeft;
+                        if(currentPxPerBeat > 0) {
+                            const snapLine = Math.round(rawLeft / currentPxPerBeat) * currentPxPerBeat;
+                            if(Math.abs(snapLine - rawLeft) <= snapThreshold) newLeft = snapLine;
+                        }
+                        newLeft = Math.max(0, Math.min(newLeft, parentW - parseFloat(newEl.style.width)));
+                        newEl.style.left = newLeft + 'px';
+                        newSegment.start = newLeft / pxPerSec;
+                        let overlapUi = false;
+                        tracks[trackIndex].segments.forEach(s => {
+                            if(s === newSegment || !s.el.classList.contains('waveform-block')) return;
+                            const oL = parseFloat(s.el.style.left);
+                            const oR = oL + parseFloat(s.el.style.width);
+                            if(newLeft < oR && newLeft + parseFloat(newEl.style.width) > oL) overlapUi = true;
+                        });
+                        if(overlapUi) newEl.classList.add('overlap'); else newEl.classList.remove('overlap');
+                    }
+                }
+                function onUp() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    if(newEl.classList.contains('drum-block')) {
+                        window.dispatchEvent(new CustomEvent('segmentUpdated', { detail: { trackIndex, segment: newSegment } }));
+                    }
+                }
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+                return;
+            }
             startX = e.clientX;
             origLeft = parseFloat(el.style.left);
             origWidth = parseFloat(el.style.width);
@@ -429,21 +581,44 @@ window.studio.arrangement = (function(){
             function onMove(ev){
                 const dx = ev.clientX - startX;
                 if(mode === 'move'){
-                    let newLeft = Math.round((origLeft + dx) / currentPxPerBeat) * currentPxPerBeat;
+                    const rawLeft = origLeft + dx;
+                    let newLeft = rawLeft;
                     // clamp within container
                     const parentW = el.parentElement.getBoundingClientRect().width;
-                    newLeft = Math.max(0, Math.min(newLeft, parentW - origWidth));
-                    // prevent overlap
-                    let overlap = false;
-                    tracks[trackIndex].segments.forEach(s=>{
-                        if(s === segment) return;
-                        const oL = parseFloat(s.el.style.left);
-                        const oR = oL + parseFloat(s.el.style.width);
-                        if(newLeft < oR && newLeft + origWidth > oL) overlap = true;
-                    });
-                    if(!overlap) {
+                    if(el.classList.contains('waveform-block')){
+                        // free move with magnetic snap for waveform
+                        if(currentPxPerBeat > 0) {
+                            const snapLine = Math.round(rawLeft / currentPxPerBeat) * currentPxPerBeat;
+                            if(Math.abs(snapLine - rawLeft) <= snapThreshold) newLeft = snapLine;
+                        }
+                        newLeft = Math.max(0, Math.min(newLeft, parentW - origWidth));
+                        // apply position
                         el.style.left = newLeft + 'px';
                         segment.start = newLeft / pxPerSec;
+                        // check overlap UI for waveform
+                        let overlapUi = false;
+                        tracks[trackIndex].segments.forEach(s => {
+                            if(s === segment || !s.el.classList.contains('waveform-block')) return;
+                            const oL = parseFloat(s.el.style.left);
+                            const oR = oL + parseFloat(s.el.style.width);
+                            if(newLeft < oR && newLeft + origWidth > oL) overlapUi = true;
+                        });
+                        if(overlapUi) el.classList.add('overlap'); else el.classList.remove('overlap');
+                    } else {
+                        // strict snap and no-overlap for drum blocks
+                        newLeft = Math.round(rawLeft / currentPxPerBeat) * currentPxPerBeat;
+                        newLeft = Math.max(0, Math.min(newLeft, parentW - origWidth));
+                        let overlap = false;
+                        tracks[trackIndex].segments.forEach(s=>{
+                            if(s === segment) return;
+                            const oL = parseFloat(s.el.style.left);
+                            const oR = oL + parseFloat(s.el.style.width);
+                            if(newLeft < oR && newLeft + origWidth > oL) overlap = true;
+                        });
+                        if(!overlap) {
+                            el.style.left = newLeft + 'px';
+                            segment.start = newLeft / pxPerSec;
+                        }
                     }
                 } else if(mode === 'resize-right'){
                     let newW = origWidth + dx;
@@ -480,6 +655,24 @@ window.studio.arrangement = (function(){
             document.addEventListener('mouseup', onUp);
         });
     }
+
+    // keyboard copy-paste
+    document.addEventListener('keydown', e => {
+        // CTRL+C
+        if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+            const sel = document.querySelector('.arr-segment.selected');
+            if (sel && sel.segment) {
+                const idx = parseInt(sel.closest('.arrangement-track-row').dataset.index, 10);
+                clipboard = { trackIndex: idx, segment: sel.segment };
+            }
+        }
+        // CTRL+V
+        if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+            if (clipboard) {
+                duplicateSegment(clipboard.trackIndex, clipboard.segment);
+            }
+        }
+    });
 
     // set playhead to specific time position
     function setPosition(seconds){
@@ -565,8 +758,8 @@ window.studio.arrangement = (function(){
                 document.querySelector('.studio-timer').textContent = `${h}:${m}:${s}`;
             }
             function onUp() {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
+                document.removeEventListener('mousemove');
+                document.removeEventListener('mouseup');
             }
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
@@ -599,7 +792,8 @@ window.studio.arrangement = (function(){
                 if(!document.body.classList.contains('paint-mode')) return;
                 e.preventDefault();
                 const scrollContainer = document.querySelector('.studio-arrangement-scroll');
-                const rect = arrangementArea.getBoundingClientRect();
+                // use scroll container bounds to calculate correct positions when scrolled
+                const rect = scrollContainer.getBoundingClientRect();
                 const startX = e.clientX - rect.left + scrollContainer.scrollLeft;
                 const startSnap = Math.round(startX / currentPxPerBeat) * currentPxPerBeat;
                 const segEl = document.createElement('div');
@@ -652,6 +846,45 @@ window.studio.arrangement = (function(){
                 }
                 document.addEventListener('mousemove', onMove);
                 document.addEventListener('mouseup', onUp);
+            });
+        }
+        // enable paint-mode instrument block creation for new row
+        else if(type === 'piano') {
+            row.addEventListener('mousedown', function(e) {
+                if(!document.body.classList.contains('paint-mode')) return;
+                e.preventDefault();
+                const scrollContainer = document.querySelector('.studio-arrangement-scroll');
+                const rect = scrollContainer.getBoundingClientRect();
+                const startX = e.clientX - rect.left + scrollContainer.scrollLeft;
+                const segEl = document.createElement('div');
+                segEl.className = 'arr-segment instrument-block';
+                segEl.style.left = startX + 'px';
+                segEl.style.width = '100px'; // default width
+                row.appendChild(segEl);
+                // finalize segment on click
+                const segment = {
+                    start: startX / pxPerSec,
+                    duration: 100 / pxPerSec,
+                    el: segEl,
+                    buffer: null,
+                    played: false,
+                    name: 'Instrument ' + instrumentBlockCounter,
+                    number: instrumentBlockCounter
+                };
+                instrumentBlockCounter++;
+                const numSpan = document.createElement('span');
+                numSpan.className = 'instrument-block-number';
+                numSpan.textContent = segment.number;
+                segEl.appendChild(numSpan);
+                tracks[idx].segments.push(segment);
+                segEl.segment = segment;
+                segEl.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    document.querySelectorAll('.arr-segment.instrument-block.selected').forEach(el=>el.classList.remove('selected'));
+                    segEl.classList.add('selected');
+                    window.dispatchEvent(new CustomEvent('segmentSelected', { detail: { trackIndex: idx, segment } }));
+                });
+                makeDraggableResizable(segEl, segment, idx);
             });
         }
         // adjust playhead height

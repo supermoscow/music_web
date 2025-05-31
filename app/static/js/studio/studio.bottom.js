@@ -77,6 +77,25 @@ window.studio.bottom = (function() {
                 bottomTabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 const tabType = tab.getAttribute('data-tab');
+                if(tabType === 'editor') {
+                    // switch editor content based on segment type
+                    if (currentSegment && currentSegment.segment && currentSegment.segment.el.classList.contains('instrument-block')) {
+                        if (typeof window.renderInstrumentEditor === 'function') {
+                            window.renderInstrumentEditor(currentSegment);
+                        } else {
+                            bottomContent.innerHTML = '<div style="color:red">乐器编辑器加载失败</div>';
+                        }
+                    } else {
+                        // default to drum machine editor
+                        if (window.renderDrumMachineEditor) {
+                            window.renderDrumMachineEditor(currentSegment);
+                        } else {
+                            console.error('renderDrumMachineEditor 未定义，请检查 drum_machine.js 是否已正确加载');
+                            bottomContent.innerHTML = '<div style="color:red">鼓机模块加载失败</div>';
+                        }
+                    }
+                    return;
+                }
                 if(tabType === 'inspector') {
                     if(currentSelection) {
                         renderInspector(currentSelection);
@@ -84,14 +103,6 @@ window.studio.bottom = (function() {
                     } else {
                         bottomContent.innerHTML = '<div id="track-inspector"><div class="no-selection">请选择轨道</div></div>';
                         bottomInfo.textContent = '';
-                    }
-                } else if(tabType === 'editor') {
-                    // 鼓机编辑器：如果有 currentSegment，调用新版 drum 机渲染，否则提示选择鼓机块
-                    if (window.renderDrumMachineEditor) {
-                        window.renderDrumMachineEditor(currentSegment);
-                    } else {
-                        console.error('renderDrumMachineEditor 未定义，请检查 drum_machine.js 是否已正确加载');
-                        bottomContent.innerHTML = '<div style="color:red">鼓机模块加载失败</div>';
                     }
                 } else {
                     bottomContent.innerHTML = tabContents[tabType] || '';

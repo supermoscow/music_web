@@ -256,6 +256,7 @@ body {
 .arr-segment { position: absolute; top: 0; height: 100%; }
 /* waveform blocks styling */
 .waveform-block { background: #888; cursor: pointer; }
+.arr-segment.waveform-block.overlap { background: rgba(136, 136, 136, 0.6); }
 /* canvas inside segments */
 .arr-segment canvas { position: absolute; top: 0; left: 0; height: 100%; }
 .arr-segment.drum-block {
@@ -270,7 +271,6 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    /* full coverage, pixels stretched via CSS */
     image-rendering: pixelated;
     pointer-events: none;
     z-index: 5;
