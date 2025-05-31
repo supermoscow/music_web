@@ -63,9 +63,10 @@ window.studio.bottom = (function() {
 
         let currentSelection = null;
         let currentSegment = null;
-        // listen for drum block selection: update bottomInfo with track and block name
+        // listen for drum block/instrument block selection: update bottomInfo with track and block name
         window.addEventListener('segmentSelected', function(e) {
             currentSegment = e.detail;
+            // 不要在这里直接渲染钢琴窗，只记录当前segment
             const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
             const trackName = trackItems[e.detail.trackIndex]?.querySelector('span').textContent || '';
             const blockName = e.detail.segment.name || '';
@@ -78,17 +79,16 @@ window.studio.bottom = (function() {
                 tab.classList.add('active');
                 const tabType = tab.getAttribute('data-tab');
                 if(tabType === 'editor') {
-                    // switch editor content based on segment type
+                    // 只在切换到editor时渲染钢琴窗，避免多次渲染导致音符错乱
                     if (currentSegment && currentSegment.segment && currentSegment.segment.el.classList.contains('instrument-block')) {
                         if (typeof window.renderInstrumentEditor === 'function') {
-                            window.renderInstrumentEditor(bottomContent); // 修正：传递编辑区容器
+                            window.renderInstrumentEditor(bottomContent, currentSegment.segment);
                         } else {
                             bottomContent.innerHTML = '<div style="color:red">乐器编辑器加载失败</div>';
                         }
                     } else {
-                        // default to drum machine editor
                         if (window.renderDrumMachineEditor) {
-                            window.renderDrumMachineEditor(bottomContent); // 也建议修正为传递容器
+                            window.renderDrumMachineEditor(currentSegment);
                         } else {
                             console.error('renderDrumMachineEditor 未定义，请检查 drum_machine.js 是否已正确加载');
                             bottomContent.innerHTML = '<div style="color:red">鼓机模块加载失败</div>';

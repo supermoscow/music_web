@@ -77,6 +77,7 @@ window.studio.arrangement = (function() {
         } else if (type === 'instrument-block') {
             newSeg.name = originalSeg.name + ' copy';
             newSeg.number = instrumentBlockCounter++;
+            newSeg.beats = originalSeg.beats;
             segEl.segment = newSeg;
             const numSpan = document.createElement('span');
             numSpan.className = 'instrument-block-number';
@@ -182,7 +183,7 @@ window.studio.arrangement = (function() {
                             // assign block number and label
                             segment.name = 'Block ' + drumBlockCounter;
                             segment.number = drumBlockCounter; // 新增编号属性
-                            segEl.segment = segment; // 关键：将 segment 赋值给 segEl，便于后续读取编号
+                            segEl.segment = segment; // 关键��将 segment 赋值给 segEl，便于后续读取编号
                             // 用span包裹编号，便于样式控制
                             const numSpan = document.createElement('span');
                             numSpan.className = 'drum-block-number';
@@ -275,6 +276,8 @@ window.studio.arrangement = (function() {
                                 number: instrumentBlockCounter
                             };
                             instrumentBlockCounter++;
+                            // 新增：记录 instrument-block 的 beats 属性
+                            segment.beats = (endSnap - startSnap) / currentPxPerBeat;
                             const numSpan = document.createElement('span');
                             numSpan.className = 'instrument-block-number';
                             numSpan.textContent = segment.number;
@@ -691,7 +694,20 @@ window.studio.arrangement = (function() {
                     newW = Math.round(newW / currentPxPerBeat) * currentPxPerBeat;
                     el.style.width = newW + 'px';
                     segment.duration = newW / pxPerSec;
-                    segment.beats = newW / currentPxPerBeat;
+                    // 新增：如果是 instrument-block 也同步 beats
+                    if (el.classList.contains('instrument-block')) {
+                        segment.beats = newW / currentPxPerBeat;
+                        // 新增：缩放时立即刷新钢琴窗
+                        window.dispatchEvent(new CustomEvent('segmentSelected', {
+                            detail: {
+                                trackIndex: trackIndex,
+                                segment: segment
+                            }
+                        }));
+                    }
+                    if (el.classList.contains('drum-block')) {
+                        segment.beats = newW / currentPxPerBeat;
+                    }
                 } else if (mode === 'resize-left') {
                     let newL = origLeft + dx;
                     let newW = origWidth - dx;
@@ -708,7 +724,20 @@ window.studio.arrangement = (function() {
                     el.style.width = newW + 'px';
                     segment.start = newL / pxPerSec;
                     segment.duration = newW / pxPerSec;
-                    segment.beats = newW / currentPxPerBeat;
+                    // 新增：如果是 instrument-block 也同步 beats
+                    if (el.classList.contains('instrument-block')) {
+                        segment.beats = newW / currentPxPerBeat;
+                        // 新增：缩放时立即刷新钢琴窗
+                        window.dispatchEvent(new CustomEvent('segmentSelected', {
+                            detail: {
+                                trackIndex: trackIndex,
+                                segment: segment
+                            }
+                        }));
+                    }
+                    if (el.classList.contains('drum-block')) {
+                        segment.beats = newW / currentPxPerBeat;
+                    }
                 }
             }
 
@@ -983,6 +1012,8 @@ window.studio.arrangement = (function() {
                             number: instrumentBlockCounter
                         };
                         instrumentBlockCounter++;
+                        // 新增：记录 instrument-block 的 beats 属性
+                        segment.beats = (endSnap - startSnap) / currentPxPerBeat;
                         const numSpan = document.createElement('span');
                         numSpan.className = 'instrument-block-number';
                         numSpan.textContent = segment.number;
@@ -1149,6 +1180,23 @@ window.studio.arrangement = (function() {
         });
     });
 
+    // 监听 instrument-block 选中事件，打开钢琴窗并传递网格数
+    window.addEventListener('segmentSelected', function(e) {
+        const segment = e.detail.segment;
+        if (segment && segment.el && segment.el.classList.contains('instrument-block')) {
+            // 计算网格数：beats × 4
+            const beats = segment.beats || (segment.duration && currentPxPerBeat ? segment.duration * pxPerSec / currentPxPerBeat : 4);
+            const gridCols = Math.round(beats * 4);
+            // 假设钢琴窗容器id为 piano-window-container
+            if (window.studio && window.studio.instrument && typeof window.studio.instrument.createPianoWindow === 'function') {
+                const container = document.getElementById('piano-window-container');
+                if (container) {
+                    window.studio.instrument.createPianoWindow(container, gridCols);
+                }
+            }
+        }
+    });
+
     return {
         refreshArrangement,
         startPlayhead,
@@ -1172,3 +1220,4 @@ window.studio.arrangement = (function() {
         stopPlayback
 };
 })();
+
