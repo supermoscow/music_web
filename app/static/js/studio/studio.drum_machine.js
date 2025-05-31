@@ -13,8 +13,38 @@ async function renderDrumMachineEditor(currentSegment) {
       window._drumExtra = window._drumExtra || [];
     }
     const meter = document.getElementById('studio-meter-select').value;
-    if(currentSegment) {
-        // preset selector UI
+    if (currentSegment) {
+        // 计算格子尺寸和总宽度
+        const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--drum-cell-size')) || 32;
+        const subdivisions = 4; // 每拍4格
+        const beatExact = currentSegment.segment.beats;
+        const subdivisionsCount = beatExact * subdivisions;
+        const cellWidth = cellSize;
+        const totalPx = cellSize * subdivisionsCount;
+        // 鼓机声音列表
+        // build sounds from selected preset + extras
+        const style = document.getElementById('drum-preset-select')?.value || Object.keys(window._drumPresets)[0];
+        const baseSounds = window._drumPresets[style] || [];
+        const sounds = baseSounds.concat(window._drumExtra);
+
+        const segment = currentSegment.segment;
+        // init or resize pattern matrix, preserve existing data
+        if (!segment.pattern || segment.pattern.length !== sounds.length || segment.pattern[0].length !== subdivisionsCount) {
+          const old = segment.pattern || [];
+          segment.pattern = sounds.map((_, i) =>
+            Array.from({ length: subdivisionsCount }, (_, j) => (old[i] && old[i][j]) || false)
+          );
+        }
+
+        bottomContent.innerHTML = `
+          <div id="drum-editor">
+            <div class="drum-editor-header">
+              <div class="drum-header-label-space"></div>
+              <div class="drum-header-ticks"></div>
+            </div>
+            <div class="drum-editor-body"><div class="drum-grid"></div></div>
+          </div>`;
+        // preset selector UI appended inside bottomContent so it clears on panel switch
         let presetSelect = document.getElementById('drum-preset-select');
         if (!presetSelect) {
           const presetBar = document.createElement('div');
@@ -27,39 +57,9 @@ async function renderDrumMachineEditor(currentSegment) {
             presetSelect.appendChild(opt);
           });
           presetBar.appendChild(presetSelect);
-          bottomContent.parentNode.insertBefore(presetBar, bottomContent);
+          bottomContent.insertBefore(presetBar, bottomContent.firstChild);
           presetSelect.addEventListener('change', () => renderDrumMachineEditor(currentSegment));
         }
-        // 计算格子尺寸和总宽度
-        const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--drum-cell-size')) || 32;
-        const subdivisions = 4; // 每拍4格
-        const beatExact = currentSegment.segment.beats;
-        const subdivisionsCount = beatExact * subdivisions;
-        const cellWidth = cellSize;
-        const totalPx = cellSize * subdivisionsCount;
-        // 鼓机声音列表
-        // build sounds from selected preset + extras
-        const style = presetSelect.value;
-        const baseSounds = window._drumPresets[style] || [];
-        const sounds = baseSounds.concat(window._drumExtra);
-
-        const segment = currentSegment.segment;
-        // init or resize pattern matrix, preserve existing data
-        if(!segment.pattern || segment.pattern.length !== sounds.length || segment.pattern[0].length !== subdivisionsCount) {
-          const old = segment.pattern || [];
-          segment.pattern = sounds.map((_, i) =>
-            Array.from({length: subdivisionsCount}, (_, j) => (old[i] && old[i][j]) || false)
-          );
-        }
-
-        bottomContent.innerHTML = `
-          <div id="drum-editor">
-            <div class="drum-editor-header">
-              <div class="drum-header-label-space"></div>
-              <div class="drum-header-ticks"></div>
-            </div>
-            <div class="drum-editor-body"><div class="drum-grid"></div></div>
-          </div>`;
         const header = bottomContent.querySelector('.drum-editor-header');
         const ticksContainer = header.querySelector('.drum-header-ticks');
         const labelSpace = header.querySelector('.drum-header-label-space');
@@ -92,13 +92,13 @@ async function renderDrumMachineEditor(currentSegment) {
             const rowGrid = document.createElement('div');
             rowGrid.className = 'drum-row-grid';
             rowGrid.style.width = totalPx + 'px';
-            for(let b=0; b<subdivisionsCount; b++) {
+            for (let b = 0; b < subdivisionsCount; b++) {
                 const cell = document.createElement('div');
                 cell.className = 'drum-cell';
                 cell.style.width = cellWidth + 'px';
                 cell.dataset.file = sound.file;
                 // restore active state
-                if(segment.pattern[rowIdx][b]) cell.classList.add('active');
+                if (segment.pattern[rowIdx][b]) cell.classList.add('active');
                 cell.addEventListener('click', () => {
                     cell.classList.toggle('active');
                     segment.pattern[rowIdx][b] = cell.classList.contains('active');
@@ -113,51 +113,58 @@ async function renderDrumMachineEditor(currentSegment) {
         // 添加新音色按钮
         let addBtn = document.getElementById('drum-add-sound-btn');
         if (!addBtn) {
-          addBtn = document.createElement('button'); addBtn.id='drum-add-sound-btn'; addBtn.textContent='+';
-          addBtn.style.margin='8px';
+          addBtn = document.createElement('button'); addBtn.id = 'drum-add-sound-btn'; addBtn.textContent = '+';
+          addBtn.style.margin = '8px';
           grid.parentNode.appendChild(addBtn);
           addBtn.addEventListener('click', () => {
             // remove existing menu if any
             const prev = document.querySelector('.drum-sound-menu'); if (prev) prev.remove();
             // show selection menu near button
-            const sel = document.createElement('div'); sel.className='drum-sound-menu';
+            const sel = document.createElement('div'); sel.className = 'drum-sound-menu';
             sel.style.position = 'fixed';
             sel.style.background = '#333'; sel.style.color = '#fff'; sel.style.zIndex = '1000';
-            sel.style.maxHeight = '300px'; sel.style.overflowY = 'auto';
+            sel.style.maxHeight = '300px'; // allow overflow for submenus
             // position popup
             const rect = addBtn.getBoundingClientRect();
             sel.style.left = `${rect.left}px`;
             sel.style.top = `${rect.bottom}px`;
-            // preset groups
+            // build hover-based hierarchical menu
+            sel.innerHTML = ''; // clear any previous content
+            // Drum 预设 root item
+            const drumItem = document.createElement('div'); drumItem.className = 'menu-item has-children'; drumItem.textContent = '鼓机预设';
+            const drumSub = document.createElement('div'); drumSub.className = 'submenu';
             Object.entries(window._drumPresets).forEach(([style, items]) => {
-              const header = document.createElement('div'); header.textContent=style; header.style.fontWeight='bold'; sel.appendChild(header);
+              const styleItem = document.createElement('div'); styleItem.className = 'menu-item has-children'; styleItem.textContent = style;
+              const styleSub = document.createElement('div'); styleSub.className = 'submenu';
               items.forEach(s => {
-                const item = document.createElement('div'); item.textContent=s.name; item.dataset.file=s.file;
-                item.style.cursor='pointer'; item.style.padding='2px 8px';
-                item.addEventListener('click', () => {
-                  window._drumExtra.push({name: s.name, file: s.file});
-                  sel.remove();
-                  renderDrumMachineEditor(currentSegment);
-                }); sel.appendChild(item);
+                const leaf = document.createElement('div'); leaf.className = 'menu-item'; leaf.textContent = s.name; leaf.dataset.file = s.file;
+                leaf.addEventListener('click', () => { window._drumExtra.push({ name: s.name, file: s.file }); sel.remove(); renderDrumMachineEditor(currentSegment); });
+                styleSub.appendChild(leaf);
               });
+              styleItem.appendChild(styleSub);
+              drumSub.appendChild(styleItem);
             });
-            // soundbank groups
-            const sbHeader = document.createElement('div'); sbHeader.textContent='Soundbank'; sbHeader.style.fontWeight='bold'; sel.appendChild(sbHeader);
-            Object.entries(window._drumSoundbank).forEach(([group, items]) => {
-              const groupHeader = document.createElement('div'); groupHeader.textContent=group; groupHeader.style.textDecoration='underline'; sel.appendChild(groupHeader);
+            drumItem.appendChild(drumSub);
+            sel.appendChild(drumItem);
+            // Soundbank root item
+            const sbItem = document.createElement('div'); sbItem.className = 'menu-item has-children'; sbItem.textContent = 'Soundbank';
+            const sbSub = document.createElement('div'); sbSub.className = 'submenu';
+            Object.entries(window._drumSoundbank).forEach(([folder, items]) => {
+              const folderItem = document.createElement('div'); folderItem.className = 'menu-item has-children'; folderItem.textContent = folder;
+              const folderSub = document.createElement('div'); folderSub.className = 'submenu';
               items.forEach(s => {
-                const item = document.createElement('div'); item.textContent=s.name; item.dataset.file=s.file;
-                item.style.cursor='pointer'; item.style.padding='2px 8px';
-                item.addEventListener('click', () => {
-                  window._drumExtra.push({name: s.name, file: s.file});
-                  sel.remove();
-                  renderDrumMachineEditor(currentSegment);
-                }); sel.appendChild(item);
+                const leaf = document.createElement('div'); leaf.className = 'menu-item'; leaf.textContent = s.name; leaf.dataset.file = s.file;
+                leaf.addEventListener('click', () => { window._drumExtra.push({ name: s.name, file: s.file }); sel.remove(); renderDrumMachineEditor(currentSegment); });
+                folderSub.appendChild(leaf);
               });
+              folderItem.appendChild(folderSub);
+              sbSub.appendChild(folderItem);
             });
+            sbItem.appendChild(sbSub);
+            sel.appendChild(sbItem);
             document.body.appendChild(sel);
             // adjust position to fit within viewport
-            const {innerWidth, innerHeight} = window;
+            const { innerWidth, innerHeight } = window;
             const menuRect = sel.getBoundingClientRect();
             if (menuRect.bottom > innerHeight) {
               sel.style.top = `${Math.max(0, rect.top - menuRect.height)}px`;
@@ -165,6 +172,28 @@ async function renderDrumMachineEditor(currentSegment) {
             if (menuRect.right > innerWidth) {
               sel.style.left = `${Math.max(0, innerWidth - menuRect.width)}px`;
             }
+
+            // adjust position of nested submenus on hover to keep within viewport
+            sel.querySelectorAll('.menu-item.has-children').forEach(item => {
+              const sub = item.querySelector('.submenu');
+              item.addEventListener('mouseenter', () => {
+                const rect = sub.getBoundingClientRect();
+                // horizontal
+                if (rect.right > window.innerWidth) {
+                  sub.style.left = `-${rect.width}px`;
+                } else {
+                  sub.style.left = `100%`;
+                }
+                // vertical
+                if (rect.bottom > window.innerHeight) {
+                  const diff = rect.bottom - window.innerHeight;
+                  sub.style.top = `-${diff}px`;
+                } else {
+                  sub.style.top = `0`;
+                }
+              });
+            });
+
             // close popup when clicking outside
             const closeHandler = e => {
               if (!sel.contains(e.target) && e.target !== addBtn) {
@@ -231,7 +260,7 @@ async function renderDrumMachineEditor(currentSegment) {
           allRows.forEach(row => {
             const cells = row.querySelectorAll('.drum-cell');
             cells.forEach((cell, idx) => {
-              if(idx === step) {
+              if (idx === step) {
                 cell.classList.add('playing');
                 cell.style.backgroundColor = '#ffe066';
               } else {
@@ -252,7 +281,7 @@ async function renderDrumMachineEditor(currentSegment) {
               const cells = row.querySelectorAll('.drum-cell');
               const cellIdx = step % subdivisionsCount;
               const cell = cells[cellIdx];
-              if(cell && cell.classList.contains('active')) {
+              if (cell && cell.classList.contains('active')) {
                 // 只允许每个cell在一个完整循环内被调度一次
                 const lastStep = scheduledMap[rowIdx][cellIdx];
                 if (lastStep >= 0 && step - lastStep < subdivisionsCount) return;
@@ -274,14 +303,14 @@ async function renderDrumMachineEditor(currentSegment) {
           if (audioCtx.state === 'suspended') {
             await audioCtx.resume();
           }
-          if(isPlaying) return;
+          if (isPlaying) return;
           playBtn.disabled = true;
           pauseBtn.disabled = false;
           drumPlayStep = 0;
           scheduledStep = 0;
           scheduledSources = [];
           // 初始化调度去重Map
-          scheduledMap = Array.from({length: allRows.length}, () => Array(subdivisionsCount).fill(-1));
+          scheduledMap = Array.from({ length: allRows.length }, () => Array(subdivisionsCount).fill(-1));
           // --- 新增：播放前预加载所有鼓样本 ---
           await preloadAllBuffers();
           isPlaying = true;
@@ -291,7 +320,7 @@ async function renderDrumMachineEditor(currentSegment) {
           // 预调度前2小节
           scheduleDrumNotes(bpm, playStartTime, 0, subdivisionsCount * 2);
           function rafLoop() {
-            if(!isPlaying) return;
+            if (!isPlaying) return;
             const now = audioCtx.currentTime;
             const elapsed = now - playStartTime;
             const step = Math.floor(elapsed / interval) % subdivisionsCount;
@@ -314,7 +343,7 @@ async function renderDrumMachineEditor(currentSegment) {
           if (drumPlayRAF) cancelAnimationFrame(drumPlayRAF);
           // 立即停止所有已调度但未播放的音频
           scheduledSources.forEach(src => {
-            try { src.stop && src.stop(); } catch(e){}
+            try { src.stop && src.stop(); } catch (e) { }
           });
           scheduledSources = [];
           // --- 新增：暂停时清空调度Map ---
@@ -351,12 +380,12 @@ async function renderDrumMachineEditor(currentSegment) {
             drumPlayStep = startStep;
             scheduledStep = startStep;
             scheduledSources = [];
-            scheduledMap = Array.from({length: allRows.length}, () => Array(subdivisionsCount).fill(-1));
+            scheduledMap = Array.from({ length: allRows.length }, () => Array(subdivisionsCount).fill(-1));
             playStartTime = audioCtx.currentTime - offsetTime;
             // 只调度当前及后续音符
             scheduleDrumNotes(bpm, playStartTime, startStep, startStep + totalSteps);
             function rafLoop() {
-              if(!isPlaying) return;
+              if (!isPlaying) return;
               const now = audioCtx.currentTime;
               const elapsed = now - playStartTime;
               const step = (Math.floor(elapsed / (60 / bpm / subdivisions))) % totalSteps;
@@ -371,10 +400,10 @@ async function renderDrumMachineEditor(currentSegment) {
           }
         };
 
-        if(bottomInfo) bottomInfo.textContent = '';
+        if (bottomInfo) bottomInfo.textContent = '';
     } else {
         bottomContent.innerHTML = '<div class="no-selection">请选择鼓机块</div>';
-        if(bottomInfo) bottomInfo.textContent = '';
+        if (bottomInfo) bottomInfo.textContent = '';
     }
 }
 

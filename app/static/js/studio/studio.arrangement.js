@@ -20,25 +20,24 @@ window.studio.arrangement = (function(){
         const pattern = segment.pattern || [];
         const rows = pattern.length;
         const cols = pattern[0] ? pattern[0].length : 0;
-        const cellSize = 4; // 缩略图单元格大小(px)
-        const width = cols * cellSize;
-        const height = rows * cellSize;
         // 创建canvas
         const canvas = document.createElement('canvas');
         canvas.className = 'drum-block-thumbnail';
-        canvas.width = width;
-        canvas.height = height;
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
+        // 分辨率: 列数 x 行数，对应每个step一个像素
+        canvas.width = cols;
+        canvas.height = rows;
+        // css拉伸至父容器大小，像素渲染
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
         const ctx = canvas.getContext('2d');
-        // 背景
+        // 背景填充
         ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(0, 0, width, height);
-        // 绘制活跃格
+        ctx.fillRect(0, 0, cols, rows);
+        // 绘制活跃step
         ctx.fillStyle = '#4caf50';
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
-                if (pattern[r][c]) ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                if (pattern[r][c]) ctx.fillRect(c, r, 1, 1);
             }
         }
         el.appendChild(canvas);
