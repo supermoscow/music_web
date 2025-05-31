@@ -80,6 +80,8 @@ function renderDrumMachineEditor(currentSegment) {
                 cell.addEventListener('click', () => {
                     const active = cell.classList.toggle('active');
                     segment.pattern[rowIdx][b] = active;
+                    // 通知鼓块模式更新，用于刷新缩略图
+                    window.dispatchEvent(new CustomEvent('segmentUpdated', { detail: { segment } }));
                 });
                 rowGrid.appendChild(cell);
             }
@@ -97,7 +99,7 @@ function renderDrumMachineEditor(currentSegment) {
         `;
         bottomContent.prepend(controls);
 
-        // 事件绑定必须在DOM插入后
+        // 事件绑定必���在DOM插入后
         const playBtn = controls.querySelector('#drum-play-btn');
         const pauseBtn = controls.querySelector('#drum-pause-btn');
         playBtn.onclick = playDrumMachine;
@@ -223,7 +225,7 @@ function renderDrumMachineEditor(currentSegment) {
           pauseBtn.disabled = true;
           highlightStep(-1);
           if (drumPlayRAF) cancelAnimationFrame(drumPlayRAF);
-          // 立即停止所有已调度但未播放的音频
+          // ���即停止所有已调度但未播放的音频
           scheduledSources.forEach(src => {
             try { src.stop && src.stop(); } catch(e){}
           });

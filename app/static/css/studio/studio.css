@@ -259,41 +259,33 @@ body {
 /* canvas inside segments */
 .arr-segment canvas { position: absolute; top: 0; left: 0; height: 100%; }
 .arr-segment.drum-block {
-    background: rgba(0, 128, 0, 0.3);
-    border: 1px solid #080;
-    z-index: 10;
-    pointer-events: auto;
-    cursor: pointer;
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: visible !important;
-
-    min-width: 40px;
-    min-height: 32px;
-
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid #4caf50;
+    position: absolute;
+    overflow: hidden;
 }
-.drum-block-number {
-    font-size: 18px;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 1px 1px 2px #000;
+.drum-block-thumbnail {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    image-rendering: pixelated;
     pointer-events: none;
-    user-select: none;
-    z-index: 20;
-    position: relative;
-
-    background: rgba(0,0,0,0.5);
-    padding: 2px 8px;
-    border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-
+    z-index: 5;
 }
-/* Highlight selected drum-block in arrangement */
 .arr-segment.drum-block.selected {
     outline: 2px solid #3CB371; /* green border */
 }
+.drum-block-number {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 1px 4px;
+    font-size: 10px;
+    border-radius: 2px;
+    z-index: 10;
+}
+/* Highlight selected drum-block in arrangement */
 .studio-sound-library {
     width: 120px;
     background: #23272a;

@@ -12,6 +12,46 @@ window.studio.arrangement = (function(){
     let currentPxPerBeat = 0; // spacing for beats
     let drumBlockCounter = 1; // counter for drum-block numbering
 
+    // 新增：生成鼓机缩略图的函数
+    function generateDrumThumbnail(el, segment) {
+        // 移除旧的缩略图
+        const old = el.querySelector('.drum-block-thumbnail');
+        if (old) old.remove();
+        const pattern = segment.pattern || [];
+        const rows = pattern.length;
+        const cols = pattern[0] ? pattern[0].length : 0;
+        const cellSize = 4; // 缩略图单元格大小(px)
+        const width = cols * cellSize;
+        const height = rows * cellSize;
+        // 创建canvas
+        const canvas = document.createElement('canvas');
+        canvas.className = 'drum-block-thumbnail';
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        const ctx = canvas.getContext('2d');
+        // 背景
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(0, 0, width, height);
+        // 绘制活跃格
+        ctx.fillStyle = '#4caf50';
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (pattern[r][c]) ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+            }
+        }
+        el.appendChild(canvas);
+    }
+
+    // 监听鼓机编辑更新事件，实时更新缩略图
+    window.addEventListener('segmentUpdated', e => {
+        const segment = e.detail.segment;
+        if (segment && segment.el && segment.el.classList.contains('drum-block')) {
+            generateDrumThumbnail(segment.el, segment);
+        }
+    });
+
     function refreshArrangement(){
         arrangementArea = document.querySelector('.arrangement-area');
         arrangementArea.innerHTML = '';
@@ -110,6 +150,8 @@ window.studio.arrangement = (function(){
                             });
                             // enable dragging and resizing in select-mode
                             makeDraggableResizable(segEl, segment, idx);
+                            // 生成缩略图
+                            generateDrumThumbnail(segEl, segment);
                             // 调试：每次新建 drum-block 时打印
                             console.log('[debug][create] drum-block', segEl, segEl.textContent, segEl.querySelector('.drum-block-number'));
                         } else {
@@ -146,6 +188,8 @@ window.studio.arrangement = (function(){
                     numSpan.className = 'drum-block-number';
                     numSpan.textContent = number;
                     block.appendChild(numSpan);
+                    // 确保渲染缩略图
+                    if (block.segment) generateDrumThumbnail(block, block.segment);
                 }
             });
         }, 100);
