@@ -183,7 +183,7 @@ window.studio.arrangement = (function() {
                             // assign block number and label
                             segment.name = 'Block ' + drumBlockCounter;
                             segment.number = drumBlockCounter; // 新增编号属性
-                            segEl.segment = segment; // 关键��将 segment 赋值给 segEl，便于后续读取编号
+                            segEl.segment = segment; // 关键�� segment 赋值给 segEl，便于后续读取编号
                             // 用span包裹编号，便于样式控制
                             const numSpan = document.createElement('span');
                             numSpan.className = 'drum-block-number';
@@ -409,38 +409,62 @@ window.studio.arrangement = (function() {
         window.dispatchEvent(new CustomEvent('playheadMoved', {detail: {position: currentPos}}));
     }
 
+    // ========== 优化播放头移动逻辑 ==========
+    // 用 requestAnimationFrame 替代 setInterval，提升流畅度
+    let playheadRAF = null;
     function startPlayback() {
         isPlaying = true;
-        playheadTimer = setInterval(() => {
-            updatePlayheadPosition(currentPos + 1); // Example increment, adjust based on tempo
-        }, 1000 / pxPerSec);
+        let lastTimestamp = null;
+        function rafStep(timestamp) {
+            if (!isPlaying) return;
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            // 计算每帧应移动的像素，基于 BPM
+            const bpm = parseFloat(document.querySelector('.studio-bpm input').value) || defaultBPM;
+            const pxPerBeat = currentPxPerBeat || (pxPerSec * 4 / bpm); // 兜底
+            const pxPerSecEff = (bpm / 60) * currentPxPerBeat * (4 / (parseInt(document.getElementById('studio-meter-select').value.split('/')[0]) || 4));
+            const elapsed = (timestamp - lastTimestamp) / 1000;
+            // 以 pxPerSecEff 为基准，移动距离
+            const movePx = pxPerSecEff * elapsed;
+            updatePlayheadPosition(currentPos + movePx);
+            lastTimestamp = timestamp;
+            playheadRAF = requestAnimationFrame(rafStep);
+        }
+        playheadRAF = requestAnimationFrame(rafStep);
     }
-
     function stopPlayback() {
         isPlaying = false;
-        clearInterval(playheadTimer);
+        if (playheadRAF) cancelAnimationFrame(playheadRAF);
+        playheadRAF = null;
     }
 
+    // startPlayhead 也用 requestAnimationFrame
     function startPlayhead() {
         if (isPlaying) return;
         activeSources = []; // clear previous sources
         isPlaying = true;
         if (audioCtx.state === 'suspended') audioCtx.resume();
         tracks.forEach(t => t.segments.forEach(s => s.played = false));
-        playheadTimer = setInterval(() => {
-            // adjust speed based on BPM input
-            const bpm = parseInt(document.querySelector('.studio-bpm input').value) || defaultBPM;
-            const factor = bpm / defaultBPM;
-            // update position and dispatch event for drum-machine linkage
-            const newPos = currentPos + (pxPerSec * factor) / 60;
+        let lastTimestamp = null;
+        function rafStep(timestamp) {
+            if (!isPlaying) return;
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const bpm = parseFloat(document.querySelector('.studio-bpm input').value) || defaultBPM;
+            const pxPerBeat = currentPxPerBeat || (pxPerSec * 4 / bpm);
+            const pxPerSecEff = (bpm / 60) * currentPxPerBeat * (4 / (parseInt(document.getElementById('studio-meter-select').value.split('/')[0]) || 4));
+            const elapsed = (timestamp - lastTimestamp) / 1000;
+            const movePx = pxPerSecEff * elapsed;
+            const newPos = currentPos + movePx;
             updatePlayheadPosition(newPos);
             if (window.metronomeOn && typeof window.tickMetronome === 'function') window.tickMetronome(currentPos / pxPerSec);
             checkPlaySegments(currentPos / pxPerSec);
-        }, 1000 / 60);
+            lastTimestamp = timestamp;
+            playheadRAF = requestAnimationFrame(rafStep);
+        }
+        playheadRAF = requestAnimationFrame(rafStep);
     }
-
     function stopPlayhead() {
-        clearInterval(playheadTimer);
+        if (playheadRAF) cancelAnimationFrame(playheadRAF);
+        playheadRAF = null;
         // stop all currently playing audio sources immediately
         activeSources.forEach(src => {
             try {
@@ -862,9 +886,9 @@ window.studio.arrangement = (function() {
                 document.querySelector('.studio-timer').textContent = `${h}:${m}:${s}`;
             }
 
-            function onUp() {
-                document.removeEventListener('mousemove');
-                document.removeEventListener('mouseup');
+            function onUp(ev) {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
             }
 
             document.addEventListener('mousemove', onMove);
@@ -1125,16 +1149,14 @@ window.studio.arrangement = (function() {
     }
 
     // ===== 鼓机联动播放逻辑 =====
-    let drumBlockPlaybackState = null;
+    let drumBlockPlaybackState = { block: null, step: null };
     window.addEventListener('playheadMoved', e => {
         const px = e.detail.position;
         const bpm = parseFloat(document.querySelector('.studio-bpm input').value) || 120;
-        console.log('[drum-debug] playheadMoved px:', px, 'bpm:', bpm);
-        // 遍历所有 drum-block
+        // 只查找当前 playhead 所在 drum-block
+        let foundBlock = null, foundStep = null, foundParams = null;
         document.querySelectorAll('.arr-segment.drum-block').forEach(block => {
-            // 确保 block.segment 正确赋值
             if (!block.segment) {
-                // 尝试从 tracks 中查找 segment
                 for (const t of tracks) {
                     const seg = t.segments.find(s => s.el === block);
                     if (seg) {
@@ -1147,37 +1169,86 @@ window.studio.arrangement = (function() {
             const width = parseFloat(block.style.width);
             const startPx = left;
             const endPx = left + width;
-            // 鼓块参数
             const blockBeats = block.segment ? block.segment.beats : (width / currentPxPerBeat);
             const totalSteps = blockBeats * 4; // subdivisions=4
             const blockStartSec = startPx / pxPerSec;
             const blockDurationSec = width / pxPerSec;
-            // 判断playhead是否在block内
             if (px >= startPx && px < endPx) {
-                // 计算当前step和offset
                 const playheadSec = px / pxPerSec;
                 const offsetSec = playheadSec - blockStartSec;
                 const step = Math.floor((offsetSec / blockDurationSec) * totalSteps);
-                console.log('[drum-debug] playhead in drum-block step change:', step);
-                // 首次进入或步数变化时重启鼓机
-                if (!drumBlockPlaybackState || drumBlockPlaybackState.block !== block || drumBlockPlaybackState.step !== step) {
-                    if (window.studioDrumMachineControl) {
-                        console.log('[drum-debug] playFromStep', step, offsetSec, bpm, totalSteps);
-                        window.studioDrumMachineControl.playFromStep(step, offsetSec, bpm, totalSteps);
-                        drumBlockPlaybackState = {block, step};
-                    }
-                }
-            } else {
-                // 鼓块外，若正在播放则停止
-                if (drumBlockPlaybackState && drumBlockPlaybackState.block === block) {
-                    if (window.studioDrumMachineControl) {
-                        console.log('[drum-debug] 调用stop');
-                        window.studioDrumMachineControl.stop();
-                    }
-                    drumBlockPlaybackState = null;
-                }
+                foundBlock = block;
+                foundStep = step;
+                foundParams = { step, offsetSec, bpm, totalSteps };
             }
         });
+        // 只在 step 变化时触发 playFromStep
+        if (foundBlock) {
+            if (drumBlockPlaybackState.block !== foundBlock || drumBlockPlaybackState.step !== foundStep) {
+                if (window.studioDrumMachineControl) {
+                    window.studioDrumMachineControl.playFromStep(foundParams.step, foundParams.offsetSec, foundParams.bpm, foundParams.totalSteps);
+                }
+                drumBlockPlaybackState = { block: foundBlock, step: foundStep };
+            }
+        } else {
+            // 离开 drum-block 区域才 stop
+            if (drumBlockPlaybackState.block) {
+                if (window.studioDrumMachineControl) {
+                    window.studioDrumMachineControl.stop();
+                }
+                drumBlockPlaybackState = { block: null, step: null };
+            }
+        }
+    });
+
+    // ===== 乐器轨（instrument-block）联动播放逻辑 =====
+    let instrumentBlockPlaybackState = { block: null, step: null };
+    window.addEventListener('playheadMoved', e => {
+        const px = e.detail.position;
+        const bpm = parseFloat(document.querySelector('.studio-bpm input').value) || 120;
+        let foundBlock = null, foundStep = null, foundParams = null;
+        document.querySelectorAll('.arr-segment.instrument-block').forEach(block => {
+            if (!block.segment) {
+                for (const t of tracks) {
+                    const seg = t.segments.find(s => s.el === block);
+                    if (seg) {
+                        block.segment = seg;
+                        break;
+                    }
+                }
+            }
+            const left = parseFloat(block.style.left);
+            const width = parseFloat(block.style.width);
+            const startPx = left;
+            const endPx = left + width;
+            const blockBeats = block.segment ? block.segment.beats : (width / currentPxPerBeat);
+            const totalSteps = Math.round(blockBeats * 4); // subdivisions=4
+            const blockStartSec = startPx / pxPerSec;
+            const blockDurationSec = width / pxPerSec;
+            if (px >= startPx && px < endPx) {
+                const playheadSec = px / pxPerSec;
+                const offsetSec = playheadSec - blockStartSec;
+                const step = Math.floor((offsetSec / blockDurationSec) * totalSteps);
+                foundBlock = block;
+                foundStep = step;
+                foundParams = { step, offsetSec, bpm, totalSteps, block };
+            }
+        });
+        if (foundBlock) {
+            if (instrumentBlockPlaybackState.block !== foundBlock || instrumentBlockPlaybackState.step !== foundStep) {
+                if (window.studio && window.studio.instrument && typeof window.studio.instrument.playFromStep === 'function') {
+                    window.studio.instrument.playFromStep(foundParams.step, foundParams.offsetSec, foundParams.bpm, foundParams.totalSteps, foundParams.block);
+                }
+                instrumentBlockPlaybackState = { block: foundBlock, step: foundStep };
+            }
+        } else {
+            if (instrumentBlockPlaybackState.block) {
+                if (window.studio && window.studio.instrument && typeof window.studio.instrument.stop === 'function') {
+                    window.studio.instrument.stop();
+                }
+                instrumentBlockPlaybackState = { block: null, step: null };
+            }
+        }
     });
 
     // 监听 instrument-block 选中事件，打开钢琴窗并传递网格数
