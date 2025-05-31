@@ -82,6 +82,12 @@ function renderDrumMachineEditor(currentSegment) {
         `;
         bottomContent.prepend(controls);
 
+        // 事件绑定必须在DOM插入后
+        const playBtn = controls.querySelector('#drum-play-btn');
+        const pauseBtn = controls.querySelector('#drum-pause-btn');
+        playBtn.onclick = playDrumMachine;
+        pauseBtn.onclick = pauseDrumMachine;
+
         // 获取BPM（直接从主控栏bpm输入框获取）
         function getCurrentBPM() {
           const bpmInput = document.querySelector('.studio-bpm input[type="number"]');
@@ -100,8 +106,13 @@ function renderDrumMachineEditor(currentSegment) {
           drumBuffers[url] = audioBuffer;
           return audioBuffer;
         }
-        // 预加载所有鼓样本
-        Promise.all(sounds.map(s => loadBuffer(s.file)));
+        // 预加载所有鼓样本，返回Promise
+        function preloadAllBuffers() {
+          return Promise.all(sounds.map(s => loadBuffer(s.file)));
+        }
+
+        // --- 新增：全局调度去重Map ---
+        let scheduledMap = [];
 
         // 鼓机播放逻辑（Web Audio精准调度）
         let drumPlayRAF = null;
@@ -110,8 +121,6 @@ function renderDrumMachineEditor(currentSegment) {
         let playStartTime = 0;
         let scheduledStep = 0;
         let scheduledSources = [];
-        const playBtn = controls.querySelector('#drum-play-btn');
-        const pauseBtn = controls.querySelector('#drum-pause-btn');
         const progressBar = controls.querySelector('#drum-play-progress');
         const allRows = Array.from(grid.querySelectorAll('.drum-row'));
         function highlightStep(step) {
@@ -135,37 +144,46 @@ function renderDrumMachineEditor(currentSegment) {
           const interval = 60 / bpm / subdivisions;
           for (let step = fromStep; step < toStep; step++) {
             const playTime = startTime + (step * interval);
-            allRows.forEach(row => {
+            allRows.forEach((row, rowIdx) => {
               const cells = row.querySelectorAll('.drum-cell');
-              const cell = cells[step % subdivisionsCount];
+              const cellIdx = step % subdivisionsCount;
+              const cell = cells[cellIdx];
               if(cell && cell.classList.contains('active')) {
+                // 只允许每个cell在一个完整循环内被调度一次
+                const lastStep = scheduledMap[rowIdx][cellIdx];
+                if (lastStep >= 0 && step - lastStep < subdivisionsCount) return;
+                scheduledMap[rowIdx][cellIdx] = step;
                 const file = cell.dataset.file;
-                loadBuffer(file).then(buffer => {
-                  // 检查是否已为该step调度过（防止重复）
-                  if (!cell._lastScheduledStep || cell._lastScheduledStep !== step) {
-                    cell._lastScheduledStep = step;
-                    const src = audioCtx.createBufferSource();
-                    src.buffer = buffer;
-                    src.connect(audioCtx.destination);
-                    src.start(playTime);
-                    scheduledSources.push(src);
-                  }
-                });
+                const buffer = drumBuffers[file];
+                if (!buffer) return; // 未加载则跳过
+                const src = audioCtx.createBufferSource();
+                src.buffer = buffer;
+                src.connect(audioCtx.destination);
+                src.start(playTime);
+                scheduledSources.push(src);
               }
             });
           }
         }
-        function playDrumMachine() {
+        async function playDrumMachine() {
+          console.log('playDrumMachine called');
+          if (audioCtx.state === 'suspended') {
+            await audioCtx.resume();
+          }
           if(isPlaying) return;
-          isPlaying = true;
           playBtn.disabled = true;
           pauseBtn.disabled = false;
           drumPlayStep = 0;
           scheduledStep = 0;
+          scheduledSources = [];
+          // 初始化调度去重Map
+          scheduledMap = Array.from({length: allRows.length}, () => Array(subdivisionsCount).fill(-1));
+          // --- 新增：播放前预加载所有鼓样本 ---
+          await preloadAllBuffers();
+          isPlaying = true;
           playStartTime = audioCtx.currentTime + 0.05; // 稍微延迟，避免首音丢失
           const bpm = getCurrentBPM();
           const interval = 60 / bpm / subdivisions;
-          scheduledSources = [];
           // 预调度前2小节
           scheduleDrumNotes(bpm, playStartTime, 0, subdivisionsCount * 2);
           function rafLoop() {
@@ -195,6 +213,8 @@ function renderDrumMachineEditor(currentSegment) {
             try { src.stop && src.stop(); } catch(e){}
           });
           scheduledSources = [];
+          // --- 新增：暂停时清空调度Map ---
+          scheduledMap = [];
         }
         function resetDrumMachine() {
           isPlaying = false;
@@ -205,6 +225,47 @@ function renderDrumMachineEditor(currentSegment) {
           if (drumPlayRAF) cancelAnimationFrame(drumPlayRAF);
         }
         window.resetDrumMachine = resetDrumMachine;
+
+        // ======= 鼓机外部控制API =======
+        // 支持外部调用：window.studioDrumMachineControl.playFromStep/stop
+        window.studioDrumMachineControl = {
+          /**
+           * 播放鼓机，从指定step（格）开始
+           * @param {number} startStep - 从第几个格子开始播放
+           * @param {number} offsetTime - 当前播放头相对drum-block起点的秒数
+           * @param {number} bpm - 当前BPM
+           * @param {number} totalSteps - 总格数
+           */
+          async playFromStep(startStep, offsetTime, bpm, totalSteps) {
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            await preloadAllBuffers();
+            // 立即停止之前的播放
+            if (isPlaying) pauseDrumMachine();
+            isPlaying = true;
+            playBtn && (playBtn.disabled = true);
+            pauseBtn && (pauseBtn.disabled = false);
+            drumPlayStep = startStep;
+            scheduledStep = startStep;
+            scheduledSources = [];
+            scheduledMap = Array.from({length: allRows.length}, () => Array(subdivisionsCount).fill(-1));
+            playStartTime = audioCtx.currentTime - offsetTime;
+            // 只调度当前及后续音符
+            scheduleDrumNotes(bpm, playStartTime, startStep, startStep + totalSteps);
+            function rafLoop() {
+              if(!isPlaying) return;
+              const now = audioCtx.currentTime;
+              const elapsed = now - playStartTime;
+              const step = (Math.floor(elapsed / (60 / bpm / subdivisions))) % totalSteps;
+              highlightStep(step);
+              updateProgress(step);
+              drumPlayRAF = requestAnimationFrame(rafLoop);
+            }
+            rafLoop();
+          },
+          stop() {
+            pauseDrumMachine();
+          }
+        };
 
         if(bottomInfo) bottomInfo.textContent = '';
     } else {

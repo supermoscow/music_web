@@ -640,5 +640,52 @@ window.studio.arrangement = (function(){
         });
     }
 
+    // ===== 鼓机联动播放逻辑 =====
+    let drumBlockPlaybackState = null;
+    window.addEventListener('playheadMoved', e => {
+        const px = e.detail.position;
+        const bpm = parseFloat(document.querySelector('.studio-bpm input').value) || 120;
+        console.log('[drum-debug] playheadMoved px:', px, 'bpm:', bpm);
+        // 遍历所有 drum-block
+        document.querySelectorAll('.arr-segment.drum-block').forEach(block => {
+            const left = parseFloat(block.style.left);
+            const width = parseFloat(block.style.width);
+            const startPx = left;
+            const endPx = left + width;
+            // 鼓块参数
+            const blockBeats = block.segment ? block.segment.beats : (width / currentPxPerBeat);
+            const totalSteps = blockBeats * 4; // subdivisions=4
+            const blockStartSec = startPx / pxPerSec;
+            const blockDurationSec = width / pxPerSec;
+            // 判断playhead是否在block内
+            if(px >= startPx && px < endPx) {
+                // 计算当前step和offset
+                const playheadSec = px / pxPerSec;
+                const offsetSec = playheadSec - blockStartSec;
+                const step = Math.floor((offsetSec / blockDurationSec) * totalSteps);
+                console.log('[drum-debug] playhead in drum-block:', {block, startPx, endPx, playheadSec, offsetSec, step, totalSteps});
+                // 若未在播放，启动鼓机
+                if(!drumBlockPlaybackState || drumBlockPlaybackState.block !== block) {
+                    if(window.studioDrumMachineControl) {
+                        console.log('[drum-debug] 调用playFromStep', step, offsetSec, bpm, totalSteps);
+                        window.studioDrumMachineControl.playFromStep(step, offsetSec, bpm, totalSteps);
+                        drumBlockPlaybackState = { block, playing: true };
+                    } else {
+                        console.warn('[drum-debug] studioDrumMachineControl未定义');
+                    }
+                }
+            } else {
+                // 鼓块外，若正在播放则停止
+                if(drumBlockPlaybackState && drumBlockPlaybackState.block === block) {
+                    if(window.studioDrumMachineControl) {
+                        console.log('[drum-debug] 调用stop');
+                        window.studioDrumMachineControl.stop();
+                    }
+                    drumBlockPlaybackState = null;
+                }
+            }
+        });
+    });
+
     return {refreshArrangement, startPlayhead, stopPlayhead, resetPlayhead, resizePlayhead, addWaveformBlock, setPosition, getCurrentTime, addTrackRow, moveTrack, setTrackMute, setTrackSolo, setTrackVolume, setTrackPan, armTrack, getTrackSettings, updateGainStates, updatePlayheadPosition, startPlayback, stopPlayback};
 })();
