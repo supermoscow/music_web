@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="welcome">
+    <h1>欢迎来到音乐网站</h1>
+    <p>发现最新最热音乐</p>
+</div>
+<div class="four-blocks-container">
+    <a class="block" href="{{ url_for('hot.hot') }}">
+        <i class="bi bi-award"></i>
+        <h2>热门榜单</h2>
+        <p>汇聚当下最热门的音乐，紧跟音乐潮流。</p>
+    </a>
+    <a class="block" href="{{ url_for('tool.tool') }}">
+        <i class="bi bi-tools"></i>
+        <h2>音乐工具</h2>
+        <p>丰富实用的音乐工具，满足你的多样需求。</p>
+    </a>
+    <a class="block" href="{{ url_for('studio.studio') }}">
+        <i class="bi bi-mic"></i>
+        <h2>录音室</h2>
+        <p>自由录制属于你的音乐，释放无限创意。</p>
+    </a>
+    <a class="block" href="{{ url_for('study.study') }}" target="_blank">
+        <i class="bi bi-book"></i>
+        <h2>音乐学习</h2>
+        <p>专业的音乐知识，助你提升音乐素养。</p>
+    </a>
+</div>
+{% endblock %}

@@ -50,6 +50,95 @@ window.studio.track = (function() {
         return 0; // Replace with actual logic to get playhead position
     }
 
+    // 新增：重置轨道面板
+    function reset() {
+        trackCount = 0;
+        const trackList = document.querySelector('.studio-track-scroll .track-list');
+        if (trackList) trackList.innerHTML = '';
+        // 通知 arrangement 区域刷新
+        if(window.studio.arrangement && window.studio.arrangement.refreshArrangement) {
+            window.studio.arrangement.refreshArrangement();
+        }
+    }
+
+    // 新增：导出轨道面板信息
+    function serialize() {
+        const trackList = document.querySelector('.studio-track-scroll .track-list');
+        if (!trackList) return [];
+        return Array.from(trackList.children).map(track => ({
+            type: track.getAttribute('data-type'),
+            name: track.textContent,
+            muted: track.dataset.muted === 'true',
+            solo: track.dataset.solo === 'true',
+            armed: track.dataset.armed === 'true'
+        }));
+    }
+
+    // 新增：根据 JSON 还原轨道面板
+    function load(data) {
+        reset();
+        if (!data || !Array.isArray(data)) return;
+        const trackList = document.querySelector('.studio-track-scroll .track-list');
+        data.forEach((t, idx) => {
+            // 复用 addTrackMenu 的逻辑
+            const track = document.createElement('div');
+            track.className = 'track-item';
+            track.setAttribute('data-type', t.type);
+            track.dataset.armed = t.armed ? 'true' : 'false';
+            track.dataset.muted = t.muted ? 'true' : 'false';
+            track.dataset.solo = t.solo ? 'true' : 'false';
+            let icon = '';
+            if(t.type === 'audio') icon = '🎤';
+            if(t.type === 'drum') icon = '🥁';
+            if(t.type === 'piano') icon = '🎹';
+            track.innerHTML = `
+                <span>${icon} 轨道${idx+1} (${t.type})</span>
+                <button class="mute-btn">M</button>
+                <button class="solo-btn">S</button>
+            `;
+            // 录音点
+            const armDot = document.createElement('span');
+            armDot.className = 'arm-dot';
+            armDot.title = '���音轨';
+            armDot.addEventListener('click', function(ev) {
+                ev.stopPropagation();
+                document.querySelectorAll('.studio-track-scroll .track-list .track-item').forEach(t=>{
+                    t.dataset.armed = 'false';
+                });
+                track.dataset.armed = 'true';
+            });
+            // 静音/独奏按钮
+            const muteBtn = track.querySelector('.mute-btn');
+            const soloBtn = track.querySelector('.solo-btn');
+            muteBtn.addEventListener('click', function(ev) {
+                ev.stopPropagation();
+                const isMuted = track.dataset.muted === 'true';
+                track.dataset.muted = (!isMuted).toString();
+                muteBtn.classList.toggle('active', !isMuted);
+                const idx = Array.from(trackList.children).indexOf(track);
+                if(window.studio.arrangement && window.studio.arrangement.setTrackMute) {
+                    window.studio.arrangement.setTrackMute(idx, !isMuted);
+                }
+            });
+            soloBtn.addEventListener('click', function(ev) {
+                ev.stopPropagation();
+                const isSolo = track.dataset.solo === 'true';
+                track.dataset.solo = (!isSolo).toString();
+                soloBtn.classList.toggle('active', !isSolo);
+                const idx = Array.from(trackList.children).indexOf(track);
+                if(window.studio.arrangement && window.studio.arrangement.setTrackSolo) {
+                    window.studio.arrangement.setTrackSolo(idx, !isSolo);
+                }
+            });
+            track.appendChild(armDot);
+            trackList.appendChild(track);
+        });
+        // 通知 arrangement 区域刷新
+        if(window.studio.arrangement && window.studio.arrangement.refreshArrangement) {
+            window.studio.arrangement.refreshArrangement();
+        }
+    }
+
     function init() {
         const addTrackBtn = document.getElementById('add-track-btn');
         const addTrackMenu = document.getElementById('add-track-menu');
@@ -137,6 +226,8 @@ window.studio.track = (function() {
                 } else if(window.studio.arrangement) {
                     window.studio.arrangement.refreshArrangement();
                 }
+                // 添加轨道后，通知混音器刷新
+                window.dispatchEvent(new Event('trackListChanged'));
             });
         });
         // 默认添加一个录音轨道并选中
@@ -207,6 +298,6 @@ window.studio.track = (function() {
             updatePlayhead(playheadPosition);
         }, 100);
     }
-    return { init };
+    return { init, reset, serialize, load };
 })();
 

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundWave - 创作者音乐平台</title>
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF', // 主色调：深蓝色，传达专业和信任
+            secondary: '#FF4D4F', // 辅助色：红色，代表激情与创造力
+            accent: '#722ED1', // 强调色：紫色，象征艺术与灵感
+            dark: '#1D2129', // 深色文本
+            light: '#F2F3F5', // 浅色背景
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'wave': 'wave 1.5s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            wave: {
+              '0%': { height: '10px' },
+              '50%': { height: '30px' },
+              '100%': { height: '10px' },
+            }
+          }
+        },
+      }
+    }
+  </script>
+
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .bg-gradient-music {
+        background: linear-gradient(135deg, #165DFF 0%, #722ED1 100%);
+      }
+      .transition-custom {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .music-wave span {
+        display: inline-block;
+        width: 4px;
+        margin: 0 2px;
+        background-color: theme('colors.secondary');
+        border-radius: 2px;
+        animation: wave 1.5s ease-in-out infinite;
+      }
+      .music-wave span:nth-child(2) { animation-delay: 0.1s; }
+      .music-wave span:nth-child(3) { animation-delay: 0.2s; }
+      .music-wave span:nth-child(4) { animation-delay: 0.3s; }
+      .music-wave span:nth-child(5) { animation-delay: 0.4s; }
+    }
+  </style>
+</head>
+<body class="font-inter bg-light text-dark">
+  <!-- 导航栏 -->
+  <header id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-white/90 backdrop-blur-md shadow-sm">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center space-x-2">
+          <div class="music-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <span class="text-xl font-bold">Sound<span class="text-primary">Wave</span></span>
+        </div>
+
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="#home" class="font-medium text-gray-700 hover:text-primary transition-custom">首页</a>
+          <a href="#features" class="font-medium text-gray-700 hover:text-primary transition-custom">平台特色</a>
+          <a href="#benefits" class="font-medium text-gray-700 hover:text-primary transition-custom">创作者福利</a>
+          <a href="#join" class="font-medium text-gray-700 hover:text-primary transition-custom">立即加入</a>
+        </nav>
+
+        <!-- 移动端菜单按钮 -->
+        <button id="menu-toggle" class="md:hidden text-gray-700 focus:outline-none">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+
+        <!-- 创作者中心按钮 -->
+        <button id="creator-btn" class="hidden md:block bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-full shadow-md hover:shadow-lg transition-custom flex items-center space-x-2">
+          <i class="fa fa-user-circle"></i>
+          <span>创作者中心</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 shadow-lg">
+      <div class="container mx-auto px-4 py-3 space-y-3">
+        <a href="#home" class="block py-2 font-medium text-gray-700 hover:text-primary">首页</a>
+        <a href="#features" class="block py-2 font-medium text-gray-700 hover:text-primary">平台特色</a>
+        <a href="#benefits" class="block py-2 font-medium text-gray-700 hover:text-primary">创作者福利</a>
+        <a href="#join" class="block py-2 font-medium text-gray-700 hover:text-primary">立即加入</a>
+        <button id="mobile-creator-btn" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-full shadow-md hover:shadow-lg transition-custom flex items-center justify-center space-x-2">
+          <i class="fa fa-user-circle"></i>
+          <span>创作者中心</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主横幅区域 -->
+  <section id="home" class="pt-24 pb-16 md:pt-32 md:pb-24 bg-gradient-music text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20">
+      <div class="absolute top-0 left-0 w-full h-full">
+        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <defs>
+            <pattern id="music-notes" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse" patternContentUnits="userSpaceOnUse">
+              <path d="M60,15 A15,15 0 0,1 60,45 L60,70 L30,70 L30,45 A15,15 0 0,1 30,15 Z" fill="none" stroke="white" stroke-width="2" opacity="0.5"/>
+              <path d="M85,25 A15,15 0 0,1 85,55 L85,80 L55,80 L55,55 A15,15 0 0,1 55,25 Z" fill="none" stroke="white" stroke-width="2" opacity="0.5"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="100%" height="100%" fill="url(#music-notes)"></rect>
+        </svg>
+      </div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="space-y-8">
+          <h1 class="text-[clamp(2.5rem,5vw,4rem)] font-bold leading-tight text-shadow animate-fade-in">
+            释放你的<span class="text-secondary">音乐</span>天赋
+          </h1>
+          <p class="mt-6 text-[clamp(1rem,2vw,1.25rem)] text-blue-100 max-w-xl animate-slide-down">
+            SoundWave 是专业的音乐创作与分享平台，为音乐人提供全方位支持，让你的音乐被世界听见。
+          </p>
+          <div class="mt-8 flex flex-col sm:flex-row gap-4 animate-slide-down" style="animation-delay: 0.2s">
+            <a href="#join" class="bg-white text-primary hover:bg-gray-100 font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-custom transform hover:-translate-y-1 flex items-center justify-center gap-2">
+              <i class="fa fa-rocket"></i>
+              <span>立即加入</span>
+            </a>
+            <a href="#features" class="bg-transparent border-2 border-white text-white hover:bg-white/10 font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-custom transform hover:-translate-y-1 flex items-center justify-center gap-2">
+              <i class="fa fa-play-circle"></i>
+              <span>了解更多</span>
+            </a>
+          </div>
+
+          <div class="mt-12 flex items-center gap-6">
+            <div class="flex -space-x-4">
+              <img src="https://picsum.photos/100/100?random=1" alt="创作者头像" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+              <img src="https://picsum.photos/100/100?random=2" alt="创作者头像" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+              <img src="https://picsum.photos/100/100?random=3" alt="创作者头像" class="w-12 h-12 rounded-full border-2 border-white object-cover">
+              <div class="w-12 h-12 rounded-full border-2 border-white bg-primary flex items-center justify-center text-xs font-bold">
+                500+
+              </div>
+            </div>
+            <div>
+              <div class="text-sm text-blue-100">已有超过500位音乐人加入</div>
+              <div class="flex items-center mt-1">
+                <div class="flex">
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <i class="fa fa-star text-yellow-400"></i>
+                  <i class="fa fa-star-half-o text-yellow-400"></i>
+                </div>
+                <span class="ml-2 text-sm text-blue-100">4.8/5.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative hidden md:block">
+          <div class="absolute -top-10 -right-10 w-80 h-80 bg-secondary/20 rounded-full -z-10 animate-pulse-slow"></div>
+          <div class="absolute -bottom-10 -left-10 w-80 h-80 bg-accent/20 rounded-full -z-10 animate-pulse-slow" style="animation-delay: 1s"></div>
+
+          <div class="relative animate-float">
+            <img src="https://picsum.photos/600/600?random=10" alt="音乐创作场景" class="w-full h-auto rounded-2xl shadow-2xl">
+
+            <!-- 悬浮音乐元素 -->
+            <div class="absolute -top-6 -right-6 bg-white p-4 rounded-xl shadow-lg animate-float" style="animation-delay: 0.5s">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <i class="fa fa-headphones text-primary text-xl"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">248万</div>
+                  <div class="text-xs text-gray-500">月播放量</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-lg animate-float" style="animation-delay: 1s">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
+                  <i class="fa fa-users text-secondary text-xl"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">12.5万</div>
+                  <div class="text-xs text-gray-500">粉丝数量</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute bottom-0 left-0 right-0">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
+        <path fill="#F2F3F5" fill-opacity="1" d="M0,96L48,85.3C96,75,192,53,288,53.3C384,53,480,75,576,80C672,85,768,75,864,58.7C960,43,1056,21,1152,21.3C1248,21,1344,43,1392,53.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 平台特色 -->
+  <section id="features" class="py-16 bg-light">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark">平台特色</h2>
+        <div class="w-20 h-1 bg-primary mx-auto mt-4 rounded-full"></div>
+        <p class="mt-6 text-gray-600 max-w-2xl mx-auto">
+          SoundWave 为音乐创作者提供全方位支持，助您实现音乐梦想
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- 特色卡片 1 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom p-6 transform hover:-translate-y-1 group">
+          <div class="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-custom">
+            <i class="fa fa-cloud-upload text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-3">一键发布</h3>
+          <p class="text-gray-600">
+            简单几步，轻松上传您的音乐作品，支持多种格式，快速发布到全网平台。
+          </p>
+        </div>
+
+        <!-- 特色卡片 2 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom p-6 transform hover:-translate-y-1 group">
+          <div class="w-16 h-16 bg-secondary/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-secondary/20 transition-custom">
+            <i class="fa fa-line-chart text-secondary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-3">数据追踪</h3>
+          <p class="text-gray-600">
+            实时查看作品播放量、下载量、粉丝增长等数据，了解听众喜好，优化创作方向。
+          </p>
+        </div>
+
+        <!-- 特色卡片 3 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom p-6 transform hover:-translate-y-1 group">
+          <div class="w-16 h-16 bg-accent/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-custom">
+            <i class="fa fa-money text-accent text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-3">收益分成</h3>
+          <p class="text-gray-600">
+            透明的收益分配机制，您的音乐在平台产生的收入，将按比例及时分配到您的账户。
+          </p>
+        </div>
+
+        <!-- 特色卡片 4 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom p-6 transform hover:-translate-y-1 group">
+          <div class="w-16 h-16 bg-green-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-green-500/20 transition-custom">
+            <i class="fa fa-bullhorn text-green-500 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-3">推广资源</h3>
+          <p class="text-gray-600">
+            丰富的推广渠道，包括首页推荐、专题策划、社交媒体推广等，让您的音乐获得更多曝光。
+          </p>
+        </div>
+
+        <!-- 特色卡片 5 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom p-6 transform hover:-translate-y-1 group">
+          <div class="w-16 h-16 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-purple-500/20 transition-custom">
+            <i class="fa fa-comments text-purple-500 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-3">粉丝互动</h3>
+          <p class="text-gray-600">
+            与粉丝建立直接联系，接收实时反馈，举办线上音乐会，增强粉丝粘性。
+          </p>
+        </div>
+
+        <!-- 特色卡片 6 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom p-6 transform hover:-translate-y-1 group">
+          <div class="w-16 h-16 bg-amber-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-amber-500/20 transition-custom">
+            <i class="fa fa-graduation-cap text-amber-500 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-3">创作学院</h3>
+          <p class="text-gray-600">
+            专业音乐课程、创作技巧分享、行业动态分析，助您不断提升音乐创作水平。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 创作者福利 -->
+  <section id="benefits" class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark">创作者福利</h2>
+        <div class="w-20 h-1 bg-secondary mx-auto mt-4 rounded-full"></div>
+        <p class="mt-6 text-gray-600 max-w-2xl mx-auto">
+          加入 SoundWave，享受全方位创作支持与丰厚回报
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="order-2 md:order-1">
+          <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-8 border-b border-gray-100">
+              <h3 class="text-2xl font-bold text-gray-800">创作者分成计划</h3>
+              <p class="mt-2 text-gray-600">根据作品表现，享受阶梯式收益分成</p>
+            </div>
+            <div class="p-8">
+              <div class="space-y-6">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-music text-primary"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-gray-800">基础收益</h4>
+                    <p class="text-sm text-gray-600">作品播放、下载产生的基础收益，平台分成比例业界最优</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-trophy text-secondary"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-gray-800">热门奖励</h4>
+                    <p class="text-sm text-gray-600">进入各榜单前列的作品，可获得额外现金奖励和流量扶持</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-handshake-o text-accent"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-gray-800">商业合作</h4>
+                    <p class="text-sm text-gray-600">优质创作者将获得广告植入、品牌合作等商业机会</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-gift text-green-500"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-gray-800">粉丝打赏</h4>
+                    <p class="text-sm text-gray-600">粉丝可以直接对您的作品进行打赏，收入全部归创作者所有</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 bg-gray-50 text-center">
+              <p class="text-sm text-gray-500">
+                我们承诺透明的收益分配机制，每月定期结算，确保创作者权益
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-1 md:order-2 space-y-8">
+          <div class="bg-white rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-custom">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                <i class="fa fa-headphones text-primary text-xl"></i>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800">1.2亿</h3>
+            </div>
+            <p class="text-gray-600">
+              平台月活跃用户，您的音乐将触达海量听众
+            </p>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-custom">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center">
+                <i class="fa fa-line-chart text-secondary text-xl"></i>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800">78%</h3>
+            </div>
+            <p class="text-gray-600">
+              创作者平均年收入增长率，远超行业水平
+            </p>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-custom">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
+                <i class="fa fa-users text-accent text-xl"></i>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800">120+</h3>
+            </div>
+            <p class="text-gray-600">
+              合作音乐品牌，为创作者提供丰富商业机会
+            </p>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-custom">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center">
+                <i class="fa fa-certificate text-green-500 text-xl"></i>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800">专业认证</h3>
+            </div>
+            <p class="text-gray-600">
+              优秀创作者可获得平台官方认证，提升个人品牌价值
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 成功案例 -->
+  <section class="py-16 bg-light">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark">创作者成功案例</h2>
+        <div class="w-20 h-1 bg-accent mx-auto mt-4 rounded-full"></div>
+        <p class="mt-6 text-gray-600 max-w-2xl mx-auto">
+          听听他们在 SoundWave 的成长故事
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- 案例 1 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom overflow-hidden">
+          <div class="relative">
+            <img src="https://picsum.photos/600/400?random=20" alt="创作者照片" class="w-full h-48 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+              <div class="p-6">
+                <h3 class="text-xl font-bold text-white">张明</h3>
+                <p class="text-blue-100">独立音乐人</p>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-2 text-yellow-400 mb-4">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+            </div>
+            <p class="text-gray-600 italic">
+              "加入 SoundWave 后，我的作品获得了更多曝光机会，半年内粉丝量增长了10倍，还获得了商业合作机会，收入比之前增长了5倍。"
+            </p>
+            <div class="mt-6 flex justify-between items-center">
+              <div>
+                <div class="text-sm text-gray-500">入驻时间</div>
+                <div class="font-medium">2023年3月</div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm text-gray-500">作品数量</div>
+                <div class="font-medium">24首</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 案例 2 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom overflow-hidden">
+          <div class="relative">
+            <img src="https://picsum.photos/600/400?random=21" alt="创作者照片" class="w-full h-48 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+              <div class="p-6">
+                <h3 class="text-xl font-bold text-white">李华</h3>
+                <p class="text-blue-100">乐队主唱</p>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-2 text-yellow-400 mb-4">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star-half-o"></i>
+            </div>
+            <p class="text-gray-600 italic">
+              "SoundWave 的推广资源非常强大，我们的单曲发布后迅速登上热门榜单，还获得了音乐节演出邀请，平台的创作学院也帮助我们提升了音乐制作水平。"
+            </p>
+            <div class="mt-6 flex justify-between items-center">
+              <div>
+                <div class="text-sm text-gray-500">入驻时间</div>
+                <div class="font-medium">2022年11月</div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm text-gray-500">作品数量</div>
+                <div class="font-medium">18首</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 案例 3 -->
+        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom overflow-hidden">
+          <div class="relative">
+            <img src="https://picsum.photos/600/400?random=22" alt="创作者照片" class="w-full h-48 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+              <div class="p-6">
+                <h3 class="text-xl font-bold text-white">王芳</h3>
+                <p class="text-blue-100">音乐制作人</p>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-2 text-yellow-400 mb-4">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+            </div>
+            <p class="text-gray-600 italic">
+              "作为音乐制作人，我在 SoundWave 找到了很多优秀的合作伙伴，平台的协作工具让远程创作变得非常便捷，我的制作服务订单量增长了300%。"
+            </p>
+            <div class="mt-6 flex justify-between items-center">
+              <div>
+                <div class="text-sm text-gray-500">入驻时间</div>
+                <div class="font-medium">2024年1月</div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm text-gray-500">作品数量</div>
+                <div class="font-medium">56首</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 加入我们 -->
+  <section id="join" class="py-16 bg-gradient-music text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20">
+      <div class="absolute top-0 left-0 w-full h-full">
+        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <defs>
+            <pattern id="music-notes-small" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse" patternContentUnits="userSpaceOnUse">
+              <path d="M30,10 A10,10 0 0,1 30,30 L30,45 L15,45 L15,30 A10,10 0 0,1 15,10 Z" fill="none" stroke="white" stroke-width="1" opacity="0.3"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="100%" height="100%" fill="url(#music-notes-small)"></rect>
+        </svg>
+      </div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-16">
+          <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold">加入 SoundWave 创作者计划</h2>
+          <div class="w-20 h-1 bg-white mx-auto mt-4 rounded-full"></div>
+          <p class="mt-6 text-blue-100 max-w-2xl mx-auto">
+            填写以下表单，开启您的音乐创作之旅，让世界听见您的声音
+          </p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div class="grid md:grid-cols-2">
+            <div class="p-8 md:p-12 bg-gray-50 flex flex-col justify-center">
+              <h3 class="text-2xl font-bold text-gray-800 mb-6">创作者申请表</h3>
+              <form id="join-form" class="space-y-6">
+                <div>
+                  <label for="name" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                  <input type="text" id="name" name="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-custom" placeholder="请输入您的姓名">
+                </div>
+                <div>
+                  <label for="email" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                  <input type="email" id="email" name="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-custom" placeholder="请输入您的邮箱">
+                </div>
+                <div>
+                  <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">电话</label>
+                  <input type="tel" id="phone" name="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-custom" placeholder="请输入您的电话">
+                </div>
+                <div>
+                  <label for="music-type" class="block text-sm font-medium text-gray-700 mb-1">音乐类型</label>
+                  <select id="music-type" name="music-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-custom">
+                    <option value="">请选择音乐类型</option>
+                    <option value="pop">流行</option>
+                    <option value="rock">摇滚</option>
+                    <option value="folk">民谣</option>
+                    <option value="electronic">电子</option>
+                    <option value="jazz">爵士</option>
+                    <option value="classical">古典</option>
+                    <option value="other">其他</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="portfolio" class="block text-sm font-medium text-gray-700 mb-1">作品链接</label>
+                  <input type="url" id="portfolio" name="portfolio" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-custom" placeholder="请输入您的作品链接（选填）">
+                </div>
+                <div>
+                  <label for="message" class="block text-sm font-medium text-gray-700 mb-1">个人简介</label>
+                  <textarea id="message" name="message" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-custom" placeholder="请简要介绍您的音乐背景和创作经历"></textarea>
+                </div>
+                <div class="pt-2">
+                  <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-custom flex items-center justify-center gap-2">
+                    <span>提交申请</span>
+                    <i class="fa fa-paper-plane"></i>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="p-8 md:p-12 bg-primary text-white flex flex-col justify-center">
+              <h3 class="text-2xl font-bold mb-6">创作者支持计划</h3>
+              <p class="mb-8 text-blue-100">
+                我们为每位创作者提供全方位支持，从作品推广到商业合作，助力音乐梦想成真。
+              </p>
+
+              <div class="space-y-6">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-rocket text-white text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-white text-lg">流量扶持</h4>
+                    <p class="text-blue-100 mt-1">
+                      新创作者专享流量扶持计划，提升作品曝光率
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-certificate text-white text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-white text-lg">官方认证</h4>
+                    <p class="text-blue-100 mt-1">
+                      优质创作者可获得官方认证标识，提升个人品牌价值
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-comments text-white text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-white text-lg">专属客服</h4>
+                    <p class="text-blue-100 mt-1">
+                      提供一对一专属客服，快速响应创作者需求
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fa fa-handshake-o text-white text-xl"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-white text-lg">商业合作</h4>
+                    <p class="text-blue-100 mt-1">
+                      优先推荐给品牌方，获取更多商业合作机会
+                    </p>
+                  </div>
+                </div>
+
+                <button id="creator-guide-btn" class="mt-4 bg-white text-primary hover:bg-gray-100 font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-custom flex items-center justify-center gap-2">
+                  <i class="fa fa-book"></i>
+                  <span>查看创作者指南</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-12">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center space-x-2 mb-6">
+            <div class="music-wave">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <span class="text-xl font-bold">Sound<span class="text-primary">Wave</span></span>
+          </div>
+          <p class="text-gray-400 mb-6">
+            专业的音乐创作与分享平台，让音乐连接世界
+          </p>
+          <div class="flex space-x-4">
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-custom">
+              <i class="fa fa-weixin text-xl"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-custom">
+              <i class="fa fa-weibo text-xl"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-custom">
+              <i class="fa fa-instagram text-xl"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-custom">
+              <i class="fa fa-youtube-play text-xl"></i>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-lg font-semibold mb-4">平台服务</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">创作者中心</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">音乐作品</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">音乐课程</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">演出活动</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">数据统计</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-lg font-semibold mb-4">关于我们</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">公司介绍</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">联系方式</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">加入我们</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">媒体报道</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">隐私政策</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-lg font-semibold mb-4">联系我们</h4>
+          <ul class="space-y-2">
+            <li class="flex items-start space-x-3">
+              <i class="fa fa-map-marker text-primary mt-1"></i>
+              <span class="text-gray-400">北京市朝阳区音乐科技园A座1008室</span>
+            </li>
+            <li class="flex items-center space-x-3">
+              <i class="fa fa-phone text-primary"></i>
+              <span class="text-gray-400">+86 10 8888 8888</span>
+            </li>
+            <li class="flex items-center space-x-3">
+              <i class="fa fa-envelope text-primary"></i>
+              <span class="text-gray-400">creator@soundwave.com</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
+        <p>© 2025 SoundWave. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // 导航栏滚动效果
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        navbar.classList.add('shadow-md');
+        navbar.classList.remove('bg-white/90');
+        navbar.classList.add('bg-white');
+      } else {
+        navbar.classList.remove('shadow-md');
+        navbar.classList.add('bg-white/90');
+        navbar.classList.remove('bg-white');
+      }
+    });
+
+    // 移动端菜单
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        // 关闭移动菜单（如果打开）
+        mobileMenu.classList.add('hidden');
+
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+
+    // 表单提交
+    const joinForm = document.getElementById('join-form');
+    joinForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // 表单验证
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
+      const musicType = document.getElementById('music-type').value;
+      const message = document.getElementById('message').value;
+
+      if (!name || !email || !phone || !musicType || !message) {
+        alert('请填写所有必填字段');
+        return;
+      }
+
+      // 模拟提交成功
+      alert('感谢您的申请！我们将在3个工作日内与您联系。');
+      joinForm.reset();
+    });
+
+    // 创作者指南按钮
+    const creatorGuideBtn = document.getElementById('creator-guide-btn');
+    creatorGuideBtn.addEventListener('click', () => {
+      window.open('#', '_blank');
+    });
+  </script>
+</body>
+</html>

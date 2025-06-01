@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MelodyMaster | 音乐学习平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#FF7D00',
+            dark: '#1D2939',
+            light: '#F9FAFB',
+            muted: '#667085'
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .transition-custom {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .hover-scale {
+        @apply hover:scale-105 transition-all duration-300;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-light text-dark antialiased">
+  <!-- 导航栏 -->
+  <header id="navbar" class="fixed w-full z-50 transition-all duration-300">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <a href="#" class="flex items-center space-x-2">
+          <span class="text-primary text-3xl"><i class="fa fa-music"></i></span>
+          <span class="font-bold text-xl text-dark dark:text-white">MelodyMaster</span>
+        </a>
+        
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex space-x-8">
+          <a href="#courses" class="font-medium text-dark hover:text-primary transition-colors">课程</a>
+          <a href="#teachers" class="font-medium text-dark hover:text-primary transition-colors">教师</a>
+          <a href="#method" class="font-medium text-dark hover:text-primary transition-colors">教学方法</a>
+          <a href="#testimonials" class="font-medium text-dark hover:text-primary transition-colors">学员评价</a>
+          <a href="#faq" class="font-medium text-dark hover:text-primary transition-colors">常见问题</a>
+        </nav>
+        
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="#login" class="font-medium text-dark hover:text-primary transition-colors">登录</a>
+          <a href="#register" class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg font-medium transition-all hover:shadow-lg">注册</a>
+        </div>
+        
+        <!-- 移动端菜单按钮 -->
+        <button id="menu-toggle" class="md:hidden text-dark focus:outline-none">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg absolute w-full">
+      <div class="px-4 py-5 space-y-4">
+        <a href="#courses" class="block font-medium text-dark hover:text-primary transition-colors">课程</a>
+        <a href="#teachers" class="block font-medium text-dark hover:text-primary transition-colors">教师</a>
+        <a href="#method" class="block font-medium text-dark hover:text-primary transition-colors">教学方法</a>
+        <a href="#testimonials" class="block font-medium text-dark hover:text-primary transition-colors">学员评价</a>
+        <a href="#faq" class="block font-medium text-dark hover:text-primary transition-colors">常见问题</a>
+        <div class="pt-2 flex flex-col space-y-3">
+          <a href="#login" class="font-medium text-dark hover:text-primary transition-colors">登录</a>
+          <a href="#register" class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg font-medium transition-all hover:shadow-lg text-center">注册</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 英雄区域 -->
+  <section class="pt-32 pb-20 bg-gradient-to-br from-primary/5 to-secondary/5">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row items-center">
+        <div class="w-full lg:w-1/2 mb-12 lg:mb-0">
+          <h1 class="text-[clamp(2.5rem,5vw,4rem)] font-bold leading-tight text-dark mb-6">
+            释放你的<span class="text-primary">音乐</span>天赋
+          </h1>
+          <p class="text-lg text-muted mb-8 max-w-xl">
+            无论你是初学者还是希望提升技能的音乐人，我们专业的音乐课程都能帮助你达到目标。从基础到高级，一对一教学，让音乐学习变得简单而有趣。
+          </p>
+          <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <a href="#courses" class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-lg font-medium transition-all hover:shadow-lg hover-scale text-center">
+              浏览课程
+            </a>
+            <a href="#demo" class="bg-white border border-primary text-primary hover:bg-primary/5 px-8 py-3 rounded-lg font-medium transition-all hover:shadow-lg hover-scale text-center">
+              免费试听
+            </a>
+          </div>
+          <div class="mt-10 flex items-center space-x-6">
+            <div class="flex -space-x-2">
+              <img src="https://picsum.photos/id/1005/40/40" alt="学员头像" class="w-10 h-10 rounded-full border-2 border-white">
+              <img src="https://picsum.photos/id/1012/40/40" alt="学员头像" class="w-10 h-10 rounded-full border-2 border-white">
+              <img src="https://picsum.photos/id/1027/40/40" alt="学员头像" class="w-10 h-10 rounded-full border-2 border-white">
+              <img src="https://picsum.photos/id/1074/40/40" alt="学员头像" class="w-10 h-10 rounded-full border-2 border-white">
+            </div>
+            <div>
+              <div class="flex items-center">
+                <div class="flex text-yellow-400">
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                  <i class="fa fa-star-half-o"></i>
+                </div>
+                <span class="ml-2 font-medium">4.8/5</span>
+              </div>
+              <p class="text-sm text-muted">来自 1200+ 满意学员</p>
+            </div>
+          </div>
+        </div>
+        <div class="w-full lg:w-1/2 relative">
+          <div class="relative z-10 rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-all duration-500">
+            <img src="https://picsum.photos/id/1071/600/400" alt="音乐学习场景" class="w-full h-auto">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent flex items-end">
+              <div class="p-6">
+                <div class="flex items-center mb-2">
+                  <span class="bg-secondary/90 text-white text-xs font-bold px-2 py-1 rounded">热门课程</span>
+                  <span class="ml-2 text-white text-sm">钢琴基础入门</span>
+                </div>
+                <h3 class="text-white text-xl font-bold mb-1">掌握钢琴基本技巧</h3>
+                <p class="text-white/80 text-sm mb-4">适合零基础学员的入门课程</p>
+                <a href="#" class="inline-flex items-center text-white text-sm font-medium">
+                  查看课程 <i class="fa fa-arrow-right ml-2"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="absolute -bottom-6 -right-6 w-40 h-40 bg-secondary/20 rounded-full -z-10"></div>
+          <div class="absolute -top-6 -left-6 w-32 h-32 bg-primary/20 rounded-full -z-10"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 特色和优势 -->
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold text-dark mb-4">为什么选择我们</h2>
+        <p class="text-muted max-w-2xl mx-auto">我们提供专业的音乐教育，让学习音乐变得简单、有趣且高效</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- 特色卡片 1 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <i class="fa fa-user-circle text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">专业教师团队</h3>
+          <p class="text-muted">我们的教师都拥有专业音乐学位和丰富的教学经验，确保高质量的音乐教育。</p>
+        </div>
+        
+        <!-- 特色卡片 2 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <i class="fa fa-music text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">个性化学习计划</h3>
+          <p class="text-muted">根据每个学生的兴趣、水平和目标定制专属学习计划，让学习更有针对性。</p>
+        </div>
+        
+        <!-- 特色卡片 3 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <i class="fa fa-laptop text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">灵活的在线学习</h3>
+          <p class="text-muted">通过我们的在线平台，随时随地学习音乐，无需受地域限制。</p>
+        </div>
+        
+        <!-- 特色卡片 4 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <i class="fa fa-certificate text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">专业认证</h3>
+          <p class="text-muted">完成课程后获得专业认证，为你的音乐之路增添光彩。</p>
+        </div>
+        
+        <!-- 特色卡片 5 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <i class="fa fa-book text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">丰富的教学资源</h3>
+          <p class="text-muted">提供海量的教学视频、乐谱和练习材料，帮助你全面提升音乐技能。</p>
+        </div>
+        
+        <!-- 特色卡片 6 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+            <i class="fa fa-smile-o text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">愉快的学习体验</h3>
+          <p class="text-muted">我们注重学习的趣味性，让你在愉快的氛围中掌握音乐技能。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 课程分类 -->
+  <section id="courses" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+        <div>
+          <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold text-dark mb-4">热门课程</h2>
+          <p class="text-muted max-w-2xl">探索我们丰富的音乐课程，找到适合你的学习方向</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex space-x-2 overflow-x-auto pb-2">
+          <button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium">全部课程</button>
+          <button class="bg-white hover:bg-gray-100 text-dark px-4 py-2 rounded-lg text-sm font-medium transition-colors">钢琴</button>
+          <button class="bg-white hover:bg-gray-100 text-dark px-4 py-2 rounded-lg text-sm font-medium transition-colors">吉他</button>
+          <button class="bg-white hover:bg-gray-100 text-dark px-4 py-2 rounded-lg text-sm font-medium transition-colors">声乐</button>
+          <button class="bg-white hover:bg-gray-100 text-dark px-4 py-2 rounded-lg text-sm font-medium transition-colors">作曲</button>
+          <button class="bg-white hover:bg-gray-100 text-dark px-4 py-2 rounded-lg text-sm font-medium transition-colors">乐理</button>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- 课程卡片 1 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1070/400/250" alt="钢琴入门课程" class="w-full h-52 object-cover">
+            <div class="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-2 py-1 rounded">热门</div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center text-yellow-400 text-sm mb-3">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star-half-o"></i>
+              <span class="ml-1 text-muted">(128)</span>
+            </div>
+            <h3 class="text-xl font-bold mb-2">钢琴零基础入门</h3>
+            <p class="text-muted text-sm mb-4">从基础开始，学习钢琴弹奏技巧、识谱和基本乐理知识。</p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1001/32/32" alt="教师头像" class="w-8 h-8 rounded-full">
+                <span class="ml-2 text-sm font-medium">李老师</span>
+              </div>
+              <div class="text-primary font-bold">¥299<span class="text-sm font-normal text-muted">/月</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 课程卡片 2 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1074/400/250" alt="吉他弹唱课程" class="w-full h-52 object-cover">
+            <div class="absolute top-4 right-4 bg-secondary text-white text-xs font-bold px-2 py-1 rounded">新课</div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center text-yellow-400 text-sm mb-3">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star-o"></i>
+              <span class="ml-1 text-muted">(87)</span>
+            </div>
+            <h3 class="text-xl font-bold mb-2">流行吉他弹唱</h3>
+            <p class="text-muted text-sm mb-4">学习流行歌曲吉他弹唱技巧，掌握和弦转换和节奏把握。</p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1012/32/32" alt="教师头像" class="w-8 h-8 rounded-full">
+                <span class="ml-2 text-sm font-medium">王老师</span>
+              </div>
+              <div class="text-primary font-bold">¥259<span class="text-sm font-normal text-muted">/月</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 课程卡片 3 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1071/400/250" alt="声乐训练课程" class="w-full h-52 object-cover">
+          </div>
+          <div class="p-6">
+            <div class="flex items-center text-yellow-400 text-sm mb-3">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <span class="ml-1 text-muted">(156)</span>
+            </div>
+            <h3 class="text-xl font-bold mb-2">流行声乐技巧</h3>
+            <p class="text-muted text-sm mb-4">提升你的演唱能力，学习气息控制、发声技巧和情感表达。</p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1027/32/32" alt="教师头像" class="w-8 h-8 rounded-full">
+                <span class="ml-2 text-sm font-medium">张老师</span>
+              </div>
+              <div class="text-primary font-bold">¥329<span class="text-sm font-normal text-muted">/月</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 课程卡片 4 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1073/400/250" alt="作曲课程" class="w-full h-52 object-cover">
+          </div>
+          <div class="p-6">
+            <div class="flex items-center text-yellow-400 text-sm mb-3">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star-half-o"></i>
+              <i class="fa fa-star-o"></i>
+              <span class="ml-1 text-muted">(42)</span>
+            </div>
+            <h3 class="text-xl font-bold mb-2">现代音乐作曲</h3>
+            <p class="text-muted text-sm mb-4">学习音乐创作技巧，包括旋律写作、和弦进行和编曲基础。</p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1074/32/32" alt="教师头像" class="w-8 h-8 rounded-full">
+                <span class="ml-2 text-sm font-medium">陈老师</span>
+              </div>
+              <div class="text-primary font-bold">¥399<span class="text-sm font-normal text-muted">/月</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 课程卡片 5 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1072/400/250" alt="乐理课程" class="w-full h-52 object-cover">
+          </div>
+          <div class="p-6">
+            <div class="flex items-center text-yellow-400 text-sm mb-3">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star-o"></i>
+              <span class="ml-1 text-muted">(95)</span>
+            </div>
+            <h3 class="text-xl font-bold mb-2">音乐理论基础</h3>
+            <p class="text-muted text-sm mb-4">系统学习音乐理论知识，为你的音乐学习打下坚实基础。</p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1075/32/32" alt="教师头像" class="w-8 h-8 rounded-full">
+                <span class="ml-2 text-sm font-medium">刘老师</span>
+              </div>
+              <div class="text-primary font-bold">¥249<span class="text-sm font-normal text-muted">/月</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 课程卡片 6 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1075/400/250" alt="古典钢琴课程" class="w-full h-52 object-cover">
+            <div class="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-2 py-1 rounded">热门</div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center text-yellow-400 text-sm mb-3">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star-half-o"></i>
+              <span class="ml-1 text-muted">(112)</span>
+            </div>
+            <h3 class="text-xl font-bold mb-2">古典钢琴进阶</h3>
+            <p class="text-muted text-sm mb-4">适合有基础的学员，深入学习古典钢琴曲目和演奏技巧。</p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1076/32/32" alt="教师头像" class="w-8 h-8 rounded-full">
+                <span class="ml-2 text-sm font-medium">赵老师</span>
+              </div>
+              <div class="text-primary font-bold">¥359<span class="text-sm font-normal text-muted">/月</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-center mt-12">
+        <a href="#" class="inline-flex items-center text-primary font-medium hover:text-primary/80 transition-colors">
+          查看全部课程 <i class="fa fa-arrow-right ml-2"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 教学方法 -->
+  <section id="method" class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold text-dark mb-4">我们的教学方法</h2>
+        <p class="text-muted max-w-2xl mx-auto">我们采用科学、系统的教学方法，让音乐学习更加高效</p>
+      </div>
+      
+      <div class="relative">
+        <!-- 连接线 -->
+        <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-primary/20 transform -translate-x-1/2"></div>
+        
+        <!-- 步骤 1 -->
+        <div class="relative z-10 flex flex-col md:flex-row items-center mb-16">
+          <div class="md:w-1/2 md:pr-12 md:text-right mb-8 md:mb-0">
+            <h3 class="text-xl font-bold mb-3">个性化评估</h3>
+            <p class="text-muted">每位学员都会接受全面的音乐能力评估，帮助我们了解你的起点、兴趣和目标，从而制定最适合你的学习计划。</p>
+          </div>
+          <div class="md:w-12 flex justify-center mb-8 md:mb-0">
+            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">1</div>
+          </div>
+          <div class="md:w-1/2 md:pl-12">
+            <img src="https://picsum.photos/id/1077/400/300" alt="个性化评估" class="rounded-lg shadow-lg">
+          </div>
+        </div>
+        
+        <!-- 步骤 2 -->
+        <div class="relative z-10 flex flex-col md:flex-row-reverse items-center mb-16">
+          <div class="md:w-1/2 md:pl-12 md:text-left mb-8 md:mb-0">
+            <h3 class="text-xl font-bold mb-3">定制化学习计划</h3>
+            <p class="text-muted">根据评估结果，我们为每位学员量身定制学习计划，包括课程内容、学习进度和练习方法，确保学习效果最大化。</p>
+          </div>
+          <div class="md:w-12 flex justify-center mb-8 md:mb-0">
+            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">2</div>
+          </div>
+          <div class="md:w-1/2 md:pr-12">
+            <img src="https://picsum.photos/id/1078/400/300" alt="定制化学习计划" class="rounded-lg shadow-lg">
+          </div>
+        </div>
+        
+        <!-- 步骤 3 -->
+        <div class="relative z-10 flex flex-col md:flex-row items-center mb-16">
+          <div class="md:w-1/2 md:pr-12 md:text-right mb-8 md:mb-0">
+            <h3 class="text-xl font-bold mb-3">专业指导与反馈</h3>
+            <p class="text-muted">我们的专业教师会为你提供一对一的指导，定期评估你的学习进度，并提供及时、具体的反馈，帮助你不断提高。</p>
+          </div>
+          <div class="md:w-12 flex justify-center mb-8 md:mb-0">
+            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">3</div>
+          </div>
+          <div class="md:w-1/2 md:pl-12">
+            <img src="https://picsum.photos/id/1079/400/300" alt="专业指导与反馈" class="rounded-lg shadow-lg">
+          </div>
+        </div>
+        
+        <!-- 步骤 4 -->
+        <div class="relative z-10 flex flex-col md:flex-row-reverse items-center">
+          <div class="md:w-1/2 md:pl-12 md:text-left mb-8 md:mb-0">
+            <h3 class="text-xl font-bold mb-3">持续进步与成就</h3>
+            <p class="text-muted">我们通过定期测评和演出机会，帮助你看到自己的进步，增强学习动力，同时积累演出经验，提升音乐表现力。</p>
+          </div>
+          <div class="md:w-12 flex justify-center mb-8 md:mb-0">
+            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">4</div>
+          </div>
+          <div class="md:w-1/2 md:pr-12">
+            <img src="https://picsum.photos/id/1080/400/300" alt="持续进步与成就" class="rounded-lg shadow-lg">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 教师团队 -->
+  <section id="teachers" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold text-dark mb-4">专业教师团队</h2>
+        <p class="text-muted max-w-2xl mx-auto">我们的教师都拥有丰富的教学经验和专业背景，致力于帮助每位学员实现音乐梦想</p>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- 教师卡片 1 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1001/400/400" alt="李老师" class="w-full h-80 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+              <div class="p-6">
+                <h4 class="text-white text-lg font-bold mb-1">李老师</h4>
+                <p class="text-white/80 text-sm mb-3">钢琴专业，10年教学经验</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-facebook"></i></a>
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-twitter"></i></a>
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-instagram"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-1">李老师</h3>
+            <p class="text-primary font-medium mb-3">钢琴专业教师</p>
+            <p class="text-muted text-sm">毕业于中央音乐学院，拥有10年钢琴教学经验，擅长古典和现代钢琴教学。</p>
+          </div>
+        </div>
+        
+        <!-- 教师卡片 2 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1012/400/400" alt="王老师" class="w-full h-80 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+              <div class="p-6">
+                <h4 class="text-white text-lg font-bold mb-1">王老师</h4>
+                <p class="text-white/80 text-sm mb-3">吉他专业，8年教学经验</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-facebook"></i></a>
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-twitter"></i></a>
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-instagram"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-1">王老师</h3>
+            <p class="text-primary font-medium mb-3">吉他专业教师</p>
+            <p class="text-muted text-sm">流行音乐吉他演奏家，曾参与多个乐队演出，擅长流行和摇滚吉他教学。</p>
+          </div>
+        </div>
+        
+        <!-- 教师卡片 3 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1027/400/400" alt="张老师" class="w-full h-80 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+              <div class="p-6">
+                <h4 class="text-white text-lg font-bold mb-1">张老师</h4>
+                <p class="text-white/80 text-sm mb-3">声乐专业，12年教学经验</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-facebook"></i></a>
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-twitter"></i></a>
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-instagram"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-1">张老师</h3>
+            <p class="text-primary font-medium mb-3">声乐专业教师</p>
+            <p class="text-muted text-sm">国家一级歌手，曾获多项声乐比赛大奖，擅长美声和流行演唱教学。</p>
+          </div>
+        </div>
+        
+        <!-- 教师卡片 4 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-custom hover-scale">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1074/400/400" alt="陈老师" class="w-full h-80 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+              <div class="p-6">
+                <h4 class="text-white text-lg font-bold mb-1">陈老师</h4>
+                <p class="text-white/80 text-sm mb-3">作曲专业，9年教学经验</p>
+                <div class="flex space-x-3">
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-facebook"></i></a>
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-twitter"></i></a>
+                  <a href="#" class="text-white hover:text-primary transition-colors"><i class="fa fa-instagram"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-1">陈老师</h3>
+            <p class="text-primary font-medium mb-3">作曲专业教师</p>
+            <p class="text-muted text-sm">著名音乐制作人，曾为多位歌手创作歌曲，擅长现代音乐创作和编曲教学。</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-center mt-12">
+        <a href="#" class="inline-flex items-center text-primary font-medium hover:text-primary/80 transition-colors">
+          查看全部教师 <i class="fa fa-arrow-right ml-2"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 学员评价 -->
+  <section id="testimonials" class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold text-dark mb-4">学员心声</h2>
+        <p class="text-muted max-w-2xl mx-auto">听听我们的学员如何评价他们的音乐学习之旅</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- 评价卡片 1 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="flex text-yellow-400 mb-4">
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+          </div>
+          <p class="text-muted mb-6">"在MelodyMaster学习钢琴的这一年，我的进步超出了自己的想象。李老师的教学方法非常系统，而且很有耐心，让我这个零基础的人也能弹奏出自己喜欢的曲子。"</p>
+          <div class="flex items-center">
+            <img src="https://picsum.photos/id/1005/60/60" alt="学员头像" class="w-12 h-12 rounded-full mr-4">
+            <div>
+              <h4 class="font-bold">张小明</h4>
+              <p class="text-sm text-muted">钢琴学员，学习1年</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 评价卡片 2 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="flex text-yellow-400 mb-4">
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+          </div>
+          <p class="text-muted mb-6">"作为一名成年人，我一直担心学不会吉他。但王老师的教学方式非常有趣，让我在轻松的氛围中掌握了基本技巧。现在我已经能弹唱好几首喜欢的歌曲了！"</p>
+          <div class="flex items-center">
+            <img src="https://picsum.photos/id/1012/60/60" alt="学员头像" class="w-12 h-12 rounded-full mr-4">
+            <div>
+              <h4 class="font-bold">李华</h4>
+              <p class="text-sm text-muted">吉他学员，学习8个月</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 评价卡片 3 -->
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-custom border border-gray-100 hover-scale">
+          <div class="flex text-yellow-400 mb-4">
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star-half-o"></i>
+          </div>
+          <p class="text-muted mb-6">"张老师的声乐课让我对唱歌有了全新的认识。她不仅教授技巧，还注重情感表达的培养。在她的指导下，我的演唱水平有了很大提高，也更加自信了。"</p>
+          <div class="flex items-center">
+            <img src="https://picsum.photos/id/1027/60/60" alt="学员头像" class="w-12 h-12 rounded-full mr-4">
+            <div>
+              <h4 class="font-bold">王芳</h4>
+              <p class="text-sm text-muted">声乐学员，学习1年半</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 常见问题 -->
+  <section id="faq" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold text-dark mb-4">常见问题</h2>
+        <p class="text-muted max-w-2xl mx-auto">我们整理了一些学员经常问到的问题，希望能帮助你更好地了解我们的课程</p>
+      </div>
+      
+      <div class="max-w-3xl mx-auto">
+        <!-- FAQ 项目 -->
+        <div class="mb-4">
+          <button class="faq-toggle w-full flex justify-between items-center bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-custom focus:outline-none">
+            <span class="font-bold text-left">我没有任何音乐基础，适合报名学习吗？</span>
+            <i class="fa fa-plus text-primary"></i>
+          </button>
+          <div class="faq-content hidden bg-white p-6 pt-0 rounded-b-xl shadow-md">
+            <p class="text-muted">当然适合！我们的课程专为不同水平的学员设计，包括零基础的初学者。我们的教师会从最基础的知识和技能开始教学，循序渐进地引导你学习音乐。</p>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <button class="faq-toggle w-full flex justify-between items-center bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-custom focus:outline-none">
+            <span class="font-bold text-left">课程是一对一教学还是小班教学？</span>
+            <i class="fa fa-plus text-primary"></i>
+          </button>
+          <div class="faq-content hidden bg-white p-6 pt-0 rounded-b-xl shadow-md">
+            <p class="text-muted">我们提供一对一和小班教学两种模式，你可以根据自己的需求和预算选择。一对一教学能够获得教师更多的关注和个性化指导，而小班教学则更具互动性和社交性。</p>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <button class="faq-toggle w-full flex justify-between items-center bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-custom focus:outline-none">
+            <span class="font-bold text-left">我需要自己准备乐器吗？</span>
+            <i class="fa fa-plus text-primary"></i>
+          </button>
+          <div class="faq-content hidden bg-white p-6 pt-0 rounded-b-xl shadow-md">
+            <p class="text-muted">对于钢琴和声乐课程，我们提供教学用的乐器和设备，你无需自己准备。对于吉他等便携乐器，建议你自备乐器以便课后练习。如果你还没有乐器，我们可以提供购买建议和渠道。</p>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <button class="faq-toggle w-full flex justify-between items-center bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-custom focus:outline-none">
+            <span class="font-bold text-left">课程费用包含哪些内容？</span>
+            <i class="fa fa-plus text-primary"></i>
+          </button>
+          <div class="faq-content hidden bg-white p-6 pt-0 rounded-b-xl shadow-md">
+            <p class="text-muted">课程费用包含教师授课、教材使用和教学资源访问权限。部分课程可能还包括录音、视频反馈等附加服务。具体内容可以查看各课程的详细介绍。</p>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <button class="faq-toggle w-full flex justify-between items-center bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-custom focus:outline-none">
+            <span class="font-bold text-left">如果我有事不能参加课程，可以请假吗？</span>
+            <i class="fa fa-plus text-primary"></i>
+          </button>
+          <div class="faq-content hidden bg-white p-6 pt-0 rounded-b-xl shadow-md">
+            <p class="text-muted">可以的。我们理解学员可能会有特殊情况无法参加课程。你可以提前24小时通知我们，我们会为你安排补课或调整课程时间。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 免费试听 -->
+  <section id="demo" class="py-20 bg-primary/5">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="flex flex-col lg:flex-row">
+          <div class="lg:w-1/2 p-12">
+            <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold text-dark mb-6">免费体验音乐课程</h2>
+            <p class="text-muted mb-8">预约一节免费试听课，亲身体验我们的教学方法和课程内容。无论你是零基础还是有一定基础，我们都能为你提供专业的指导。</p>
+            
+            <form class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label for="name" class="block text-sm font-medium text-dark mb-1">姓名</label>
+                  <input type="text" id="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="请输入你的姓名">
+                </div>
+                <div>
+                  <label for="phone" class="block text-sm font-medium text-dark mb-1">手机号码</label>
+                  <input type="tel" id="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="请输入你的手机号码">
+                </div>
+              </div>
+              
+              <div>
+                <label for="instrument" class="block text-sm font-medium text-dark mb-1">感兴趣的乐器</label>
+                <select id="instrument" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  <option value="">请选择乐器</option>
+                  <option value="piano">钢琴</option>
+                  <option value="guitar">吉他</option>
+                  <option value="vocal">声乐</option>
+                  <option value="composition">作曲</option>
+                  <option value="theory">乐理</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="message" class="block text-sm font-medium text-dark mb-1">留言</label>
+                <textarea id="message" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="有什么想告诉我们的？"></textarea>
+              </div>
+              
+              <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-all hover:shadow-lg">
+                预约免费试听
+              </button>
+            </form>
+          </div>
+          
+          <div class="lg:w-1/2 relative">
+            <img src="https://picsum.photos/id/1082/800/600" alt="音乐学习场景" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-dark/50 flex items-center justify-center">
+              <div class="text-center p-8">
+                <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-primary/90 transition-colors">
+                  <i class="fa fa-play text-white text-2xl"></i>
+                </div>
+                <h3 class="text-white text-2xl font-bold mb-4">观看教学视频</h3>
+                <p class="text-white/80">了解我们的教学方式和课程内容</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white pt-16 pb-8">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div>
+          <div class="flex items-center space-x-2 mb-6">
+            <span class="text-primary text-3xl"><i class="fa fa-music"></i></span>
+            <span class="font-bold text-xl">MelodyMaster</span>
+          </div>
+          <p class="text-gray-400 mb-6">释放你的音乐天赋，开启音乐学习之旅。</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors"><i class="fa fa-facebook"></i></a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors"><i class="fa fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors"><i class="fa fa-instagram"></i></a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors"><i class="fa fa-youtube"></i></a>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="font-bold text-lg mb-6">课程</h3>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">钢琴课程</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">吉他课程</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">声乐课程</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">作曲课程</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">乐理课程</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-bold text-lg mb-6">关于我们</h3>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">我们的故事</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">教师团队</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">教学环境</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">学员作品</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">联系我们</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-bold text-lg mb-6">联系方式</h3>
+          <ul class="space-y-3">
+            <li class="flex items-start">
+              <i class="fa fa-map-marker text-primary mt-1 mr-3"></i>
+              <span class="text-gray-400">北京市朝阳区音乐大厦1001室</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-phone text-primary mr-3"></i>
+              <span class="text-gray-400">400-123-4567</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-envelope text-primary mr-3"></i>
+              <span class="text-gray-400">info@melodymaster.com</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-clock-o text-primary mr-3"></i>
+              <span class="text-gray-400">周一至周日 9:00-21:00</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 pt-8">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <p class="text-gray-400 text-sm mb-4 md:mb-0">© 2025 MelodyMaster. 保留所有权利。</p>
+          <div class="flex space-x-6">
+            <a href="#" class="text-gray-400 hover:text-primary text-sm transition-colors">隐私政策</a>
+            <a href="#" class="text-gray-400 hover:text-primary text-sm transition-colors">服务条款</a>
+            <a href="#" class="text-gray-400 hover:text-primary text-sm transition-colors">Cookie政策</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // 导航栏滚动效果
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        navbar.classList.add('bg-white', 'shadow-md');
+      } else {
+        navbar.classList.remove('bg-white', 'shadow-md');
+      }
+    });
+    
+    // 移动端菜单切换
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      if (menuToggle.querySelector('i').classList.contains('fa-bars')) {
+        menuToggle.querySelector('i').classList.replace('fa-bars', 'fa-times');
+      } else {
+        menuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
+      }
+    });
+    
+    // FAQ 切换
+    const faqToggles = document.querySelectorAll('.faq-toggle');
+    faqToggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const content = toggle.nextElementSibling;
+        const icon = toggle.querySelector('i');
+        
+        // 关闭其他所有FAQ
+        document.querySelectorAll('.faq-content').forEach(item => {
+          if (item !== content) {
+            item.classList.add('hidden');
+            item.previousElementSibling.querySelector('i').classList.replace('fa-minus', 'fa-plus');
+          }
+        });
+        
+        // 切换当前FAQ
+        content.classList.toggle('hidden');
+        if (content.classList.contains('hidden')) {
+          icon.classList.replace('fa-minus', 'fa-plus');
+        } else {
+          icon.classList.replace('fa-plus', 'fa-minus');
+        }
+      });
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+        
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+          
+          // 如果是移动端，点击后关闭菜单
+          if (!mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+            menuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+    

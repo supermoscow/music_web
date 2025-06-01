@@ -1,0 +1,156 @@
+{
+  "arrangement": {
+    "tracks": [
+      {
+        "type": "audio",
+        "muted": false,
+        "solo": false,
+        "volume": 1,
+        "pan": 0,
+        "armed": false,
+        "segments": []
+      },
+      {
+        "type": "drum",
+        "muted": false,
+        "solo": false,
+        "volume": 1,
+        "pan": 0,
+        "armed": false,
+        "segments": [
+          {
+            "start": 0.5,
+            "duration": 3,
+            "beats": 6,
+            "pattern": [
+              [
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ],
+              [
+                true,
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ]
+            ]
+          }
+        ]
+      }
+    ],
+    "currentPos": 0,
+    "drumBlockCounter": 1,
+    "instrumentBlockCounter": 1
+  },
+  "track": [
+    {
+      "type": "audio",
+      "name": "\n                    🎤 轨道1 (audio)\n                    M\n                    S\n                ",
+      "muted": false,
+      "solo": false,
+      "armed": false
+    },
+    {
+      "type": "drum",
+      "name": "\n                    🥁 轨道2 (drum)\n                    M\n                    S\n                ",
+      "muted": false,
+      "solo": false,
+      "armed": false
+    }
+  ],
+  "name": "test"
+}

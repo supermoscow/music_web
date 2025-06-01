@@ -12,7 +12,8 @@ async function renderDrumMachineEditor(currentSegment) {
       window._drumSoundbank = data.soundbank;
       window._drumExtra = window._drumExtra || [];
     }
-    const meter = document.getElementById('studio-meter-select').value;
+    // ensure current preset is remembered
+    window._drumCurrentPreset = window._drumCurrentPreset || Object.keys(window._drumPresets)[0];
     if (currentSegment) {
         // 计算格子尺寸和总宽度
         const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--drum-cell-size')) || 32;
@@ -23,9 +24,12 @@ async function renderDrumMachineEditor(currentSegment) {
         const totalPx = cellSize * subdivisionsCount;
         // 鼓机声音列表
         // build sounds from selected preset + extras
-        const style = document.getElementById('drum-preset-select')?.value || Object.keys(window._drumPresets)[0];
+        const style = window._drumCurrentPreset;
         const baseSounds = window._drumPresets[style] || [];
         const sounds = baseSounds.concat(window._drumExtra);
+
+        let trackGains = []; // 新增：单轨音量数组
+        trackGains = sounds.map(() => 1); // 初始化每轨音量为1
 
         const segment = currentSegment.segment;
         // init or resize pattern matrix, preserve existing data
@@ -56,9 +60,14 @@ async function renderDrumMachineEditor(currentSegment) {
             const opt = document.createElement('option'); opt.value = style; opt.textContent = style;
             presetSelect.appendChild(opt);
           });
+          // 保持已选风格
+          presetSelect.value = window._drumCurrentPreset;
           presetBar.appendChild(presetSelect);
           bottomContent.insertBefore(presetBar, bottomContent.firstChild);
-          presetSelect.addEventListener('change', () => renderDrumMachineEditor(currentSegment));
+          presetSelect.addEventListener('change', () => {
+            window._drumCurrentPreset = presetSelect.value;
+            renderDrumMachineEditor(currentSegment);
+          });
         }
         const header = bottomContent.querySelector('.drum-editor-header');
         const ticksContainer = header.querySelector('.drum-header-ticks');
@@ -89,6 +98,13 @@ async function renderDrumMachineEditor(currentSegment) {
             label.className = 'drum-sound-label';
             label.textContent = sound.name;
             rowEl.appendChild(label);
+
+            const volSlider = document.createElement('input');
+            volSlider.type = 'range'; volSlider.min = 0; volSlider.max = 1; volSlider.step = 0.01; volSlider.value = trackGains[rowIdx];
+            volSlider.className = 'drum-volume-slider';
+            volSlider.addEventListener('input', () => { trackGains[rowIdx] = parseFloat(volSlider.value); });
+            rowEl.appendChild(volSlider);
+
             const rowGrid = document.createElement('div');
             rowGrid.className = 'drum-row-grid';
             rowGrid.style.width = totalPx + 'px';
@@ -291,7 +307,9 @@ async function renderDrumMachineEditor(currentSegment) {
                 if (!buffer) return; // 未加载则跳过
                 const src = audioCtx.createBufferSource();
                 src.buffer = buffer;
-                src.connect(audioCtx.destination);
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.value = trackGains[rowIdx];
+                src.connect(gainNode).connect(audioCtx.destination);
                 src.start(playTime);
                 scheduledSources.push(src);
               }

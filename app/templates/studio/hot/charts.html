@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container py-8">
+  <div class="d-flex flex-column sm:flex-row justify-content-between align-items-center mb-8">
+    <h1 class="display-5 mb-4 sm:mb-0 d-flex align-items-center font-bold text-gray-800">
+      <i class="bi bi-music-note-list text-primary me-3 text-2xl"></i> 全部音乐榜单
+    </h1>
+    <a href="{{ url_for('hot.hot') }}"
+       class="btn btn-outline-secondary rounded-full px-5 py-2.5 d-flex align-items-center hover:bg-gray-50 transition-colors">
+      <i class="bi bi-arrow-left me-2"></i> 返回热门页
+    </a>
+  </div>
+
+  <!-- 使用 CSS Grid 实现三个一行的榜单卡片 -->
+  <div class="chart-grid">
+    <!-- 热歌榜 -->
+    <div class="chart-card transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+      <div class="card bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100">
+        <div class="card-header bg-gradient-to-r from-danger to-danger/80 text-white py-5 px-6 rounded-t-xl">
+          <h3 class="mb-0 d-flex align-items-center text-xl font-semibold">
+            <i class="bi bi-fire me-2 text-xl"></i> 热歌榜
+          </h3>
+        </div>
+        <div class="card-body p-6">
+          <p class="card-text text-gray-600 mb-5">根据全网播放量实时更新的热门歌曲排行</p>
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="text-sm text-gray-500">更新于: 今天</span>
+            <a href="{{ url_for('hot.chart_detail', chart_type='hot') }}"
+               class="px-4 py-2 bg-danger text-white rounded-lg text-sm font-medium shadow-sm hover:shadow transition-all">
+              查看榜单 <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新歌榜 -->
+    <div class="chart-card transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+      <div class="card bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100">
+        <div class="card-header bg-gradient-to-r from-success to-success/80 text-white py-5 px-6 rounded-t-xl">
+          <h3 class="mb-0 d-flex align-items-center text-xl font-semibold">
+            <i class="bi bi-stars me-2 text-xl"></i> 新歌榜
+          </h3>
+        </div>
+        <div class="card-body p-6">
+          <p class="card-text text-gray-600 mb-5">最新发布的优质音乐作品排行</p>
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="text-sm text-gray-500">更新于: 今天</span>
+            <a href="{{ url_for('hot.chart_detail', chart_type='new') }}"
+               class="px-4 py-2 bg-success text-white rounded-lg text-sm font-medium shadow-sm hover:shadow transition-all">
+              查看榜单 <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 原创榜 -->
+    <div class="chart-card transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+      <div class="card bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100">
+        <div class="card-header bg-gradient-to-r from-primary to-primary/80 text-white py-5 px-6 rounded-t-xl">
+          <h3 class="mb-0 d-flex align-items-center text-xl font-semibold">
+            <i class="bi bi-pen me-2 text-xl"></i> 原创榜
+          </h3>
+        </div>
+        <div class="card-body p-6">
+          <p class="card-text text-gray-600 mb-5">原创音乐人作品热度排行</p>
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="text-sm text-gray-500">更新于: 今天</span>
+            <a href="{{ url_for('hot.chart_detail', chart_type='original') }}"
+               class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium shadow-sm hover:shadow transition-all">
+              查看榜单 <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 飙升榜 -->
+    <div class="chart-card transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+      <div class="card bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100">
+        <div class="card-header bg-gradient-to-r from-warning to-warning/80 text-dark py-5 px-6 rounded-t-xl">
+          <h3 class="mb-0 d-flex align-items-center text-xl font-semibold">
+            <i class="bi bi-graph-up-arrow me-2 text-xl"></i> 飙升榜
+          </h3>
+        </div>
+        <div class="card-body p-6">
+          <p class="card-text text-gray-600 mb-5">近期热度上升最快的歌曲排行</p>
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="text-sm text-gray-500">更新于: 今天</span>
+            <a href="{{ url_for('hot.chart_detail', chart_type='up') }}"
+               class="px-4 py-2 bg-warning text-dark rounded-lg text-sm font-medium shadow-sm hover:shadow transition-all">
+              查看榜单 <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem; /* 等同于 Tailwind 的 gap-6 */
+}
+
+.chart-card {
+  margin-bottom: 1.5rem; /* 增加卡片底部间距 */
+}
+</style>
+{% endblock %}

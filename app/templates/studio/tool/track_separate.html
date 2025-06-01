@@ -1,0 +1,99 @@
+{% extends "tool/tool.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tool/tool.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="{{ url_for('static', filename='js/tool/track_separate.js') }}"></script>
+<style>
+    .audio-card {
+        transition: all 0.3s ease;
+    }
+    .audio-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .progress-bar {
+        height: 6px;
+        background-color: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+        width: 100%;
+        transition: width 0.2s ease;
+    }
+    .progress-value {
+        height: 100%;
+        background-color: #3b82f6;
+        border-radius: 3px;
+        width: 0%;
+        transition: width 0.2s ease;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <header class="text-center mb-10">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+            <i class="fas fa-music text-blue-600 mr-3"></i>音轨分离工具
+        </h1>
+    </header>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 transform transition hover:shadow-xl">
+        <div class="mb-6">
+            <label for="audioFile" class="block text-gray-700 font-medium mb-2">
+                <i class="fas fa-file-audio mr-2"></i>选择音频文件
+            </label>
+            <div class="relative">
+                <input
+                    type="file"
+                    id="audioFile"
+                    accept=".mp3,.wav"
+                    class="hidden"
+                    onchange="updateFileName(this)"
+                >
+                <button
+                    type="button"
+                    id="fileButton"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition flex items-center"
+                >
+                    <i class="fas fa-upload mr-2"></i>浏览文件
+                </button>
+                <span id="fileName" class="ml-3 text-gray-500 flex-1 truncate">
+                    未选择文件
+                </span>
+            </div>
+        </div>
+        <button
+            id="separateBtn"
+            class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition flex items-center justify-center w-full md:w-auto mx-auto"
+        >
+            <i class="fas fa-sliders-h mr-2"></i>开始分离音轨
+        </button>
+    </div>
+    <div id="loadingArea" class="bg-white rounded-xl shadow-lg p-6 mb-8 hidden transform transition hover:shadow-xl">
+        <div class="text-center mb-4">
+            <div class="inline-block p-3 rounded-full bg-blue-100 text-blue-600 mb-3">
+                <i class="fas fa-spinner fa-spin text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">音轨分离中</h3>
+            <p class="text-gray-600">请稍候，我们正在处理您的音频文件</p>
+        </div>
+        <div class="progress-bar mt-6">
+            <div id="progressValue" class="progress-value"></div>
+        </div>
+        <p id="progressText" class="text-center text-gray-500 mt-2">0% 完成</p>
+    </div>
+    <div id="resultArea" class="hidden">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+            <i class="fas fa-file-audio mr-2 text-green-600"></i>分离结果
+        </h2>
+        <div id="result" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 结果将通过JS动态插入 -->
+        </div>
+    </div>
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+        <h3 class="font-bold text-blue-700">提示</h3>
+        <p class="text-blue-600 mt-1">
+            仅支持MP3和WAV格式音频文件，文件大小建议不超过100MB。分离时间取决于音频长度和复杂度。
+        </p>
+    </div>
+</div>
+{% endblock %}

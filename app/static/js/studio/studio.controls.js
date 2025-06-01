@@ -9,9 +9,74 @@ window.studio.controls = (function() {
     let mediaStream, mediaRecorder, mediaChunks = [], recordTrackIdx = -1;
     function init() {
         const timer = document.querySelector('.studio-timer');
-        const playBtn = document.querySelector('.studio-controls button[title="播放"]');
-        const rewindBtn = document.querySelector('.studio-controls button[title="回到开头"]');
-        const recordBtn = document.querySelector('.studio-controls button[title="录音"]');
+        const ctrlBar = document.querySelector('.studio-controls');
+        const playBtn = ctrlBar.querySelector('button[title="播放"]');
+        const rewindBtn = ctrlBar.querySelector('button[title="回到开头"]');
+        const recordBtn = ctrlBar.querySelector('button[title="录音"]');
+        // 新增：切割按钮
+        const cutBtn = document.createElement('button');
+        cutBtn.id = 'cut-btn';
+        cutBtn.title = '切割';
+        cutBtn.textContent = '✂️';
+        ctrlBar.appendChild(cutBtn);
+        let cutMode = false;
+        cutBtn.addEventListener('click', () => {
+            cutMode = !cutMode;
+            document.body.classList.toggle('cut-mode', cutMode);
+            cutBtn.classList.toggle('active', cutMode);
+            document.body.style.cursor = cutMode ? 'crosshair' : 'default';
+        });
+
+        // 项目相关按钮
+        const newBtn = document.getElementById('new-project-btn');
+        const saveBtn = document.getElementById('save-project-btn');
+        const openBtn = document.getElementById('open-project-btn');
+
+        // 新建工程
+        newBtn && newBtn.addEventListener('click', function() {
+            if(confirm('确定要新建工程吗？当前未保存内容将丢失。')) {
+                if(window.studio.arrangement && window.studio.arrangement.reset) window.studio.arrangement.reset();
+                if(window.studio.track && window.studio.track.reset) window.studio.track.reset();
+                // 可扩展：mixer等其他模块
+                alert('已新建空白工程');
+            }
+        });
+
+        // 保存工程
+        saveBtn && saveBtn.addEventListener('click', async function() {
+            let project = {};
+            if(window.studio.arrangement && window.studio.arrangement.serialize) project.arrangement = window.studio.arrangement.serialize();
+            if(window.studio.track && window.studio.track.serialize) project.track = window.studio.track.serialize();
+            // 可扩展：mixer等其他模块
+            const name = prompt('请输入工程名称：');
+            if(!name) return;
+            project.name = name;
+            const res = await fetch('/studio/save_project', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(project)
+            });
+            if(res.ok) alert('保存成功');
+            else alert('保存失败');
+        });
+
+        // 打开工程
+        openBtn && openBtn.addEventListener('click', async function() {
+            const res = await fetch('/studio/list_projects');
+            if(!res.ok) return alert('获取项目列表失败');
+            const list = await res.json();
+            const name = prompt('输入要打开的工程名：\n' + list.join('\n'));
+            if(!name) return;
+            const res2 = await fetch('/studio/load_project?name=' + encodeURIComponent(name));
+            if(!res2.ok) return alert('加载失败');
+            const project = await res2.json();
+            // 先加载轨道面板，再加载编排，避免刷新顺序覆盖段落
+            if(window.studio.track && window.studio.track.load) window.studio.track.load(project.track);
+            if(window.studio.arrangement && window.studio.arrangement.load) window.studio.arrangement.load(project.arrangement);
+            // 可扩展：mixer等其他模块
+            alert('工程已加载');
+        });
+
         // prepare microphone and recorder ahead of time
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ audio: true })

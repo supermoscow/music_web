@@ -1,0 +1,96 @@
+{% extends "tool/tool.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tool/tool.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>歌曲调式分析</h2>
+
+    <div class="upload-box">
+        <input type="file" id="audioFile" accept=".mp3,.wav">
+        <button onclick="analyze()">分析调式</button>
+    </div>
+
+    <div id="result" class="result-box">
+        <!-- 结果将显示在这里 -->
+    </div>
+    <div class="container">
+    <button onclick="window.location.href='/tool/'" style="margin-bottom: 20px; float: none;">
+         返回
+    </button>
+</div>
+
+<style>
+.container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.upload-box {
+    margin: 30px 0;
+    padding: 20px;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #45a049;
+}
+
+.result-box {
+    margin-top: 30px;
+    padding: 20px;
+    font-size: 24px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    min-height: 60px;
+}
+</style>
+
+<script>
+function analyze() {
+    const fileInput = document.getElementById('audioFile');
+    const resultDiv = document.getElementById('result');
+
+    if (!fileInput.files[0]) {
+        resultDiv.innerHTML = "请先选择音频文件";
+        return;
+    }
+
+    resultDiv.innerHTML = "分析中...";
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    fetch('/tool/api/analyse', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        resultDiv.innerHTML = `🎼 检测结果：${data.key}`;
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `错误：${error.message}`;
+    });
+}
+</script>
+{% endblock %}
+
