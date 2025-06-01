@@ -772,6 +772,14 @@ body.delete-mode .waveform-block:hover {
     box-sizing: border-box;
     background: transparent;
 }
+.piano-cell.col-dark {
+    background: #23272a;
+    border: 1px solid #333; /* 让深色区域也有网格线 */
+}
+.piano-cell.col-light {
+    background: #282828 ;
+    border: 1px solid #333;
+}
 .piano-roll-cell.beat {
     background: rgba(255,255,255,0.04);
 }

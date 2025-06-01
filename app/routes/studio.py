@@ -38,3 +38,30 @@ def drum_sounds():
                 if items:
                     soundbank[name] = items
     return jsonify(presets=presets, soundbank=soundbank)
+
+@studio_bp.route('/instrument-sounds')
+def instrument_sounds():
+    # Group soundbank samples from static/audio/soundbank
+    sb_dir = os.path.join(current_app.static_folder, 'audio', 'soundbank')
+    soundbank = {}
+    root_items = []
+    if os.path.isdir(sb_dir):
+        for name in os.listdir(sb_dir):
+            path = os.path.join(sb_dir, name)
+            if os.path.isdir(path):
+                items = []
+                for f in os.listdir(path):
+                    if f.lower().endswith(('.wav', '.mp3', '.ogg')):
+                        sound_name = os.path.splitext(f)[0]
+                        file_path = f"/static/audio/soundbank/{name}/{f}"
+                        items.append({'name': sound_name, 'file': file_path})
+                if items:
+                    soundbank[name] = items
+            else:
+                if name.lower().endswith(('.wav', '.mp3', '.ogg')):
+                    sound_name = os.path.splitext(name)[0]
+                    file_path = f"/static/audio/soundbank/{name}"
+                    root_items.append({'name': sound_name, 'file': file_path})
+    if root_items:
+        soundbank['Root'] = root_items
+    return jsonify(soundbank=soundbank)
