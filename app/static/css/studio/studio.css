@@ -552,7 +552,7 @@ body.delete-mode .waveform-block:hover {
 
 }
 .drum-header-label-space {
-    flex: 0 0 60px;
+    flex: 0 0 190px;
 }
 .drum-header-ticks {
     flex: 1;

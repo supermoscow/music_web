@@ -63,6 +63,7 @@ window.studio.bottom = (function() {
 
         let currentSelection = null;
         let currentSegment = null;
+        let mixerInstance = null;
         // listen for drum block/instrument block selection: update bottomInfo with track and block name
         window.addEventListener('segmentSelected', function(e) {
             currentSegment = e.detail;
@@ -104,6 +105,22 @@ window.studio.bottom = (function() {
                         bottomContent.innerHTML = '<div id="track-inspector"><div class="no-selection">请选择轨道</div></div>';
                         bottomInfo.textContent = '';
                     }
+                } else if(tabType === 'mixer') {
+                    // 渲染 Mixer 面板
+                    bottomContent.innerHTML = '<div id="mixer-panel"></div>';
+                    // 动态获取轨道信息
+                    let tracks = [];
+                    const trackItems = document.querySelectorAll('.studio-track-scroll .track-list .track-item');
+                    trackItems.forEach((item, idx) => {
+                        const id = item.getAttribute('data-id') || `track${idx+1}`;
+                        const name = item.querySelector('span') ? item.querySelector('span').textContent : `轨道${idx+1}`;
+                        tracks.push({id, name});
+                    });
+                    // 始终用最新实例
+                    mixerInstance = new window.MixerPanel(document.getElementById('mixer-panel'), tracks);
+                    // expose for arrangement playback
+                    window.mixerInstance = mixerInstance;
+                    bottomInfo.textContent = '混音器';
                 } else {
                     bottomContent.innerHTML = tabContents[tabType] || '';
                     bottomInfo.textContent = '';
@@ -133,6 +150,16 @@ window.studio.bottom = (function() {
             const editorTab = Array.from(bottomTabs).find(t => t.getAttribute('data-tab') === 'editor');
             if (editorTab && editorTab.classList.contains('active')) {
                 editorTab.click();
+            }
+        });
+
+        // 监听轨道添加/删除事件，混音器tab无论是否激活都刷新内容
+        window.addEventListener('trackListChanged', function() {
+            // 如果当前在mixer tab，强制刷新
+            const mixerTab = Array.from(bottomTabs).find(t => t.getAttribute('data-tab') === 'mixer');
+            if (mixerTab) {
+                // 只要有变动都刷新tab内容
+                mixerTab.click();
             }
         });
     }

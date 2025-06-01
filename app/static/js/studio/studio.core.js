@@ -3,11 +3,27 @@ window.studio = window.studio || {};
 
 // 设置全局主音量，默认 80%
 window.masterVolume = 0.8;
-// Monkey-patch Audio.play to apply master volume
+// Set up shared AudioContext and master gain node for mixer integration
+window.studioAudioCtx = window.studioAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+window.masterGainNode = window.masterGainNode || window.studioAudioCtx.createGain();
+window.masterGainNode.gain.value = window.masterVolume;
+window.masterGainNode.connect(window.studioAudioCtx.destination);
+window.getStudioAudioCtx = function() { return window.studioAudioCtx; };
+window.getMasterGainNode = function() { return window.masterGainNode; };
+// Monkey-patch Audio.play to route through AudioContext masterGainNode
 (function(){
     const originalPlay = Audio.prototype.play;
     Audio.prototype.play = function(){
-        this.volume = window.masterVolume;
+        try {
+            // Prevent multiple source creation
+            if (!this._mediaSource) {
+                this._mediaSource = window.studioAudioCtx.createMediaElementSource(this);
+                this._mediaSource.connect(window.masterGainNode);
+            }
+        } catch (e) {
+            console.warn('Failed to connect media element to AudioContext', e);
+        }
+        this.volume = 1; // volume controlled by masterGainNode
         return originalPlay.apply(this, arguments);
     };
 })();
@@ -19,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         volSlider.value = window.masterVolume * 100;
         volSlider.addEventListener('input', () => {
             window.masterVolume = volSlider.value / 100;
+            window.masterGainNode.gain.value = window.masterVolume;
         });
     }
 

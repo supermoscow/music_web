@@ -1,0 +1,66 @@
+{
+  "arrangement": {
+    "tracks": [
+      {
+        "type": "audio",
+        "muted": false,
+        "solo": false,
+        "volume": 1,
+        "pan": 0,
+        "armed": false,
+        "segments": []
+      },
+      {
+        "type": "audio",
+        "muted": false,
+        "solo": false,
+        "volume": 1,
+        "pan": 0,
+        "armed": false,
+        "segments": []
+      },
+      {
+        "type": "drum",
+        "muted": false,
+        "solo": false,
+        "volume": 1,
+        "pan": 0,
+        "armed": false,
+        "segments": [
+          {
+            "start": 1,
+            "duration": 2.5,
+            "beats": 5
+          }
+        ]
+      }
+    ],
+    "currentPos": 69.99359999999996,
+    "drumBlockCounter": 1,
+    "instrumentBlockCounter": 1
+  },
+  "track": [
+    {
+      "type": "audio",
+      "name": "\n                    🎤 轨道1 (audio)\n                    M\n                    S\n                ",
+      "muted": false,
+      "solo": false,
+      "armed": false
+    },
+    {
+      "type": "audio",
+      "name": "\n                    🎤 轨道2 (audio)\n                    M\n                    S\n                ",
+      "muted": false,
+      "solo": false,
+      "armed": false
+    },
+    {
+      "type": "drum",
+      "name": "\n                    🥁 轨道3 (drum)\n                    M\n                    S\n                ",
+      "muted": false,
+      "solo": false,
+      "armed": false
+    }
+  ],
+  "name": "123"
+}
