@@ -41,15 +41,18 @@ def drum_sounds():
 
 @studio_bp.route('/instrument-sounds')
 def instrument_sounds():
-    # Group soundbank samples from static/audio/soundbank
+    # 调试：打印 soundbank 目录内容
     sb_dir = os.path.join(current_app.static_folder, 'audio', 'soundbank')
+    print('DEBUG: soundbank dir:', sb_dir)
+    print('DEBUG: soundbank dir list:', os.listdir(sb_dir))
     soundbank = {}
-    root_items = []
     if os.path.isdir(sb_dir):
         for name in os.listdir(sb_dir):
             path = os.path.join(sb_dir, name)
+            print('DEBUG: checking', name, 'isdir:', os.path.isdir(path))
             if os.path.isdir(path):
                 items = []
+                print('DEBUG: folder', name, 'files:', os.listdir(path))
                 for f in os.listdir(path):
                     if f.lower().endswith(('.wav', '.mp3', '.ogg')):
                         sound_name = os.path.splitext(f)[0]
@@ -61,7 +64,8 @@ def instrument_sounds():
                 if name.lower().endswith(('.wav', '.mp3', '.ogg')):
                     sound_name = os.path.splitext(name)[0]
                     file_path = f"/static/audio/soundbank/{name}"
-                    root_items.append({'name': sound_name, 'file': file_path})
-    if root_items:
-        soundbank['Root'] = root_items
+                    if 'Root' not in soundbank:
+                        soundbank['Root'] = []
+                    soundbank['Root'].append({'name': sound_name, 'file': file_path})
+    print('DEBUG: final soundbank:', soundbank)
     return jsonify(soundbank=soundbank)

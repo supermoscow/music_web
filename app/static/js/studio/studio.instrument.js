@@ -394,18 +394,56 @@ function createPianoWindow(container, gridCols) {
             const prev = document.querySelector('.instrument-sound-menu'); if (prev) prev.remove();
             const menu = document.createElement('div'); menu.className = 'instrument-sound-menu';
             menu.style.position = 'fixed'; menu.style.background = '#333'; menu.style.color = '#fff'; menu.style.zIndex = '1000';
+            menu.style.maxHeight = '300px';
+            menu.style.minWidth = '120px';
+            menu.style.fontSize = '15px';
+            menu.style.borderRadius = '6px';
+            menu.style.boxShadow = '0 2px 12px #0008';
             const rect = instBtn.getBoundingClientRect(); menu.style.left = `${rect.left}px`; menu.style.top = `${rect.bottom}px`;
-            // build hierarchical menu for soundbank
+            // 多级菜单构建
             const sbData = window._instrumentSoundbank || {};
             Object.entries(sbData).forEach(([category, items]) => {
-                const catItem = document.createElement('div'); catItem.className = 'menu-item has-children'; catItem.textContent = category;
-                const catSub = document.createElement('div'); catSub.className = 'submenu';
+                const catItem = document.createElement('div');
+                catItem.className = 'menu-item has-children';
+                catItem.textContent = category;
+                catItem.style.position = 'relative';
+                catItem.style.padding = '6px 24px 6px 16px';
+                catItem.style.cursor = 'pointer';
+                catItem.style.whiteSpace = 'nowrap';
+                // 子菜单
+                const catSub = document.createElement('div');
+                catSub.className = 'submenu';
+                catSub.style.display = 'none';
+                catSub.style.position = 'absolute';
+                catSub.style.left = '100%';
+                catSub.style.top = '0';
+                catSub.style.background = '#333';
+                catSub.style.minWidth = '120px';
+                catSub.style.borderRadius = '6px';
+                catSub.style.boxShadow = '0 2px 12px #0008';
+                catSub.style.zIndex = '1001';
                 items.forEach(s => {
-                    const leaf = document.createElement('div'); leaf.className = 'menu-item'; leaf.textContent = s.name; leaf.dataset.file = s.file;
-                    leaf.addEventListener('click', () => { instrumentSample = s.file; c4Buffer = null; menu.remove(); });
+                    const leaf = document.createElement('div');
+                    leaf.className = 'menu-item';
+                    leaf.textContent = s.name;
+                    leaf.dataset.file = s.file;
+                    leaf.style.padding = '6px 16px';
+                    leaf.style.cursor = 'pointer';
+                    leaf.style.whiteSpace = 'nowrap';
+                    if (instrumentSample === s.file) leaf.style.background = '#555';
+                    leaf.addEventListener('click', () => {
+                        instrumentSample = s.file; c4Buffer = null; menu.remove();
+                        instBtn.style.transition = 'background 0.2s';
+                        instBtn.style.background = '#6c6';
+                        setTimeout(()=>{instBtn.style.background='';}, 300);
+                        if (typeof playPianoNote === 'function') playPianoNote('C4');
+                    });
                     catSub.appendChild(leaf);
                 });
                 catItem.appendChild(catSub);
+                // 悬停展开子菜单
+                catItem.addEventListener('mouseenter', () => { catSub.style.display = 'block'; });
+                catItem.addEventListener('mouseleave', () => { catSub.style.display = 'none'; });
                 menu.appendChild(catItem);
             });
             document.body.appendChild(menu);
@@ -414,18 +452,15 @@ function createPianoWindow(container, gridCols) {
             const mRect = menu.getBoundingClientRect();
             if (mRect.bottom > innerHeight) menu.style.top = `${rect.top - mRect.height}px`;
             if (mRect.right > innerWidth) menu.style.left = `${innerWidth - mRect.width}px`;
-            // nested submenu hover positioning
-            menu.querySelectorAll('.menu-item.has-children').forEach(item => {
-                const sub = item.querySelector('.submenu');
-                item.addEventListener('mouseenter', () => {
-                    const r = sub.getBoundingClientRect();
-                    sub.style.left = (r.right > innerWidth) ? `-${r.width}px` : '100%';
-                    sub.style.top = (r.bottom > innerHeight) ? `-${r.bottom - innerHeight}px` : '0';
-                });
-            });
             // close on outside click
-            const closeHandler = ev => { if (!menu.contains(ev.target) && ev.target !== instBtn) { menu.remove(); document.removeEventListener('click', closeHandler); }};
+            const closeHandler = ev => { if (!menu.contains(ev.target) && ev.target !== instBtn) { menu.remove(); document.removeEventListener('click', closeHandler); document.removeEventListener('keydown', escHandler); window.removeEventListener('resize', closeHandler); window.removeEventListener('scroll', closeHandler, true); } };
             document.addEventListener('click', closeHandler);
+            // esc关闭
+            const escHandler = ev => { if (ev.key === 'Escape') { menu.remove(); document.removeEventListener('click', closeHandler); document.removeEventListener('keydown', escHandler); window.removeEventListener('resize', closeHandler); window.removeEventListener('scroll', closeHandler, true); } };
+            document.addEventListener('keydown', escHandler);
+            // 窗口变化关闭
+            window.addEventListener('resize', closeHandler);
+            window.addEventListener('scroll', closeHandler, true);
         });
     }
 }

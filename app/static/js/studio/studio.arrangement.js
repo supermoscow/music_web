@@ -62,7 +62,9 @@ window.studio.arrangement = (function() {
             duration: originalSeg.duration,
             el: segEl,
             buffer: originalSeg.buffer,
-            played: false
+            played: false,
+            volume: originalSeg.volume ?? 1,
+            pitch: originalSeg.pitch ?? 1
         };
         if (type === 'drum-block') {
             newSeg.beats = originalSeg.beats;
@@ -183,8 +185,8 @@ window.studio.arrangement = (function() {
                             // assign block number and label
                             segment.name = 'Block ' + drumBlockCounter;
                             segment.number = drumBlockCounter; // 新增编号属性
-                            segEl.segment = segment; // 关键�� segment 赋值给 segEl，便于后续读取编号
-                            // 用span包裹编号，便于样式控制
+                            segEl.segment = segment; // 关键 segment 赋值给 segEl，便于后续读取编号
+                            // 用span包裹编号，便于样��控制
                             const numSpan = document.createElement('span');
                             numSpan.className = 'drum-block-number';
                             numSpan.textContent = drumBlockCounter;
@@ -491,6 +493,56 @@ window.studio.arrangement = (function() {
         }
     }
 
+    // ====== 波形块调试面板 ======
+    let debugPanel = null;
+    function showWaveformDebugPanel(segment, segEl, pageX, pageY) {
+        if (debugPanel) debugPanel.remove();
+        debugPanel = document.createElement('div');
+        debugPanel.className = 'waveform-debug-panel';
+        debugPanel.style.position = 'fixed';
+        debugPanel.style.left = pageX + 'px';
+        debugPanel.style.top = pageY + 'px';
+        debugPanel.style.zIndex = 99999;
+        debugPanel.style.background = '#222';
+        debugPanel.style.color = '#fff';
+        debugPanel.style.padding = '16px 20px 12px 20px';
+        debugPanel.style.borderRadius = '8px';
+        debugPanel.style.boxShadow = '0 2px 12px rgba(0,0,0,0.3)';
+        debugPanel.innerHTML = `
+            <div style="font-weight:bold;margin-bottom:8px;">波形块调试</div>
+            <div style="margin-bottom:8px;">
+                <label>音量 <input type="range" min="0" max="2" step="0.01" value="${segment.volume ?? 1}" id="waveform-volume-slider" style="width:120px;vertical-align:middle;"> <span id="waveform-volume-val">${(segment.volume ?? 1).toFixed(2)}</span></label>
+            </div>
+            <div style="margin-bottom:8px;">
+                <label>音高 <input type="range" min="0.5" max="2" step="0.01" value="${segment.pitch ?? 1}" id="waveform-pitch-slider" style="width:120px;vertical-align:middle;"> <span id="waveform-pitch-val">${(segment.pitch ?? 1).toFixed(2)}</span></label>
+            </div>
+            <button id="waveform-debug-close" style="margin-top:4px;">关闭</button>
+        `;
+        document.body.appendChild(debugPanel);
+        // 音量滑块
+        debugPanel.querySelector('#waveform-volume-slider').addEventListener('input', e => {
+            segment.volume = parseFloat(e.target.value);
+            debugPanel.querySelector('#waveform-volume-val').textContent = segment.volume.toFixed(2);
+        });
+        // 音高滑块
+        debugPanel.querySelector('#waveform-pitch-slider').addEventListener('input', e => {
+            segment.pitch = parseFloat(e.target.value);
+            debugPanel.querySelector('#waveform-pitch-val').textContent = segment.pitch.toFixed(2);
+        });
+        // 关闭按钮
+        debugPanel.querySelector('#waveform-debug-close').onclick = () => debugPanel.remove();
+        // 点击面板外关闭
+        setTimeout(() => {
+            function closeOnClick(e) {
+                if (!debugPanel.contains(e.target)) {
+                    debugPanel.remove();
+                    document.removeEventListener('mousedown', closeOnClick);
+                }
+            }
+            document.addEventListener('mousedown', closeOnClick);
+        }, 0);
+    }
+
     function checkPlaySegments(time) {
         const soloExists = tracks.some(t => t.solo);
         tracks.forEach(track => {
@@ -504,11 +556,12 @@ window.studio.arrangement = (function() {
                     } else if (seg.buffer) {
                         const src = audioCtx.createBufferSource();
                         src.buffer = seg.buffer;
-                        // adjust playback rate per current BPM
-                        const bpm = parseInt(document.querySelector('.studio-bpm input').value) || defaultBPM;
-                        src.playbackRate.value = bpm / defaultBPM;
-                        // connect source through persistent track nodes
-                        src.connect(track.gainNode);
+                        // 保持音高不变，播放速率固定为1
+                        src.playbackRate.value = 1;
+                        // 音量
+                        const gainNode = audioCtx.createGain();
+                        gainNode.gain.value = seg.volume != null ? seg.volume : 1;
+                        src.connect(gainNode).connect(track.gainNode);
                         src.start(0, time - seg.start);
                         activeSources.push(src);
                     }
@@ -524,36 +577,42 @@ window.studio.arrangement = (function() {
         });
     }
 
-    // add waveform block at optional offset (in seconds)
+    // ========== 修改点1：动态获取 pxPerSec ===========
+    function getPxPerSec() {
+        // 以当前BPM动态计算每秒多少像素
+        const bpm = parseFloat(document.querySelector('.studio-bpm input').value) || defaultBPM;
+        const meter = parseInt(document.getElementById('studio-meter-select').value.split('/')[0]) || 4;
+        // pxPerSec = 每拍像素 * 每分钟拍数 / 60
+        return (currentPxPerBeat || (pxPerSec * 4 / bpm)) * (bpm / 60) * (4 / meter);
+    }
+
+    // ========== 修改点2：addWaveformBlock 使用动态 pxPerSec ===========
     function addWaveformBlock(trackIndex, url, blob, offset = 0) {
         const track = tracks[trackIndex];
-        const segment = {start: offset, duration: 0, el: null, buffer: null, played: false};
+        const segment = {start: offset, duration: 0, el: null, buffer: null, played: false, volume: 1, pitch: 1};
         track.segments.push(segment);
         const row = document.querySelector(`.arrangement-track-row[data-index='${trackIndex}']`);
         const segEl = document.createElement('div');
         segEl.className = 'arr-segment waveform-block';
-        segEl.style.left = (offset * pxPerSec) + 'px';
-        // create canvas for waveform
+        // 动态获取 pxPerSec
+        const pxPerSecNow = getPxPerSec();
+        segEl.style.left = (offset * pxPerSecNow) + 'px';
         const canvas = document.createElement('canvas');
         segEl.appendChild(canvas);
-        // decode blob and draw waveform
         blob.arrayBuffer().then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer)).then(buffer => {
-            // store decoded buffer for playback
             segment.buffer = buffer;
             const raw = buffer.getChannelData(0);
             const duration = buffer.duration;
-            // set segment duration
             segment.duration = duration;
-            // set sizes based on duration
-            const width = duration * pxPerSec;
+            // 动态获取 pxPerSec
+            const pxPerSecNow = getPxPerSec();
+            const width = duration * pxPerSecNow;
             canvas.width = width;
             canvas.height = segment.el ? segment.el.getBoundingClientRect().height : canvas.height;
             segEl.style.width = width + 'px';
             const ctx = canvas.getContext('2d');
-            // draw background
             ctx.fillStyle = '#444';
             ctx.fillRect(0, 0, width, canvas.height);
-            // draw waveform
             ctx.lineWidth = 1;
             ctx.strokeStyle = '#fff';
             const step = Math.ceil(raw.length / width);
@@ -590,7 +649,62 @@ window.studio.arrangement = (function() {
                 window.dispatchEvent(new CustomEvent('segmentSelected', {detail: {trackIndex, segment}}));
             }
         });
+        // 右键弹出调试面板
+        segEl.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            showWaveformDebugPanel(segment, segEl, e.clientX, e.clientY);
+        });
         makeDraggableResizable(segEl, segment, trackIndex);
+    }
+
+    // ========== 修改点3：BPM变化时重绘波形 ===========
+    function updateWaveformBlockWidths() {
+        const bpm = parseFloat(document.querySelector('.studio-bpm input').value) || defaultBPM;
+        const meter = parseInt(document.getElementById('studio-meter-select').value.split('/')[0]) || 4;
+        const newPxPerSec = (currentPxPerBeat || (pxPerSec * 4 / bpm)) * (bpm / 60) * (4 / meter);
+        tracks.forEach((track, trackIdx) => {
+            track.segments.forEach(segment => {
+                if (segment.el && segment.el.classList.contains('waveform-block')) {
+                    const newWidth = segment.duration * newPxPerSec;
+                    segment.el.style.width = newWidth + 'px';
+                    const canvas = segment.el.querySelector('canvas');
+                    if (canvas && segment.buffer) {
+                        canvas.width = newWidth;
+                        canvas.height = segment.el.getBoundingClientRect().height;
+                        // 重新绘制波形
+                        const raw = segment.buffer.getChannelData(0);
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#444';
+                        ctx.fillRect(0, 0, newWidth, canvas.height);
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = '#fff';
+                        const step = Math.ceil(raw.length / newWidth);
+                        const amp = canvas.height / 2;
+                        for (let x = 0; x < newWidth; x++) {
+                            let min = 1.0, max = -1.0;
+                            for (let i = 0; i < step; i++) {
+                                const datum = raw[x * step + i];
+                                if (datum < min) min = datum;
+                                if (datum > max) max = datum;
+                            }
+                            const yLow = (1 + min) * amp;
+                            const yHigh = (1 + max) * amp;
+                            ctx.beginPath();
+                            ctx.moveTo(x, canvas.height - yLow);
+                            ctx.lineTo(x, canvas.height - yHigh);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // 绑定BPM输入框事件
+    const bpmInput = document.querySelector('.studio-bpm input');
+    if (bpmInput) {
+        bpmInput.addEventListener('change', updateWaveformBlockWidths);
+        bpmInput.addEventListener('input', updateWaveformBlockWidths);
     }
 
     function makeDraggableResizable(el, segment, trackIndex) {
@@ -812,7 +926,7 @@ window.studio.arrangement = (function() {
         const beatsPerBar = parseInt(meter.split('/')[0]);
         const secondsPerBar = (60 / bpm) * beatsPerBar;
         const pxPerBar = secondsPerBar * pxPerSec;
-        const numBars = 32;
+        const numBars = 128;
         // store pxPerBar and pxPerBeat for snapping
         currentPxPerBar = pxPerBar;
         currentPxPerBeat = pxPerBar / beatsPerBar;
