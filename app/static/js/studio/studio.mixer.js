@@ -11,7 +11,7 @@ class MixerTrack {
         this.pan = 0; // -1:左, 0:中, 1:右
         this.onChange = onChange;
         // Web Audio 节点链
-        this.audioCtx = window._studioAudioCtx = window._studioAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        this.audioCtx = window.getStudioAudioCtx();
         this.inputNode = this.audioCtx.createGain();
         this.gainNode = this.audioCtx.createGain();
         this.reverbNode = this.audioCtx.createConvolver();
@@ -72,7 +72,7 @@ class MixerTrack {
     }
     connectToMaster(masterNode) {
         // masterNode: AudioContext.destination 或主输出GainNode
-        this.outputNode.connect(masterNode);
+        this.outputNode.connect(window.getMasterGainNode());
     }
 }
 
@@ -144,7 +144,7 @@ class MixerPanel {
             trackDiv.style.border = '1px solid #333';
             trackDiv.style.transition = 'box-shadow 0.2s';
             trackDiv.style.marginBottom = '8px';
-            // 80%为1，80-100%为增益区间
+            // 80%��1，80-100%为增益区间
             const volumeValue = track.volume;
             let displayVolume = volumeValue;
             let gainLabel = '';
