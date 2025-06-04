@@ -42,7 +42,7 @@ window.studio.bottom = (function() {
             const volSlider = bottomContent.querySelector('#volume-slider');
             volSlider.addEventListener('input', function() {
               window.studio.arrangement.setTrackVolume(idx, parseFloat(this.value));
-            });
+             });
             const panSlider = bottomContent.querySelector('#pan-slider');
             panSlider.addEventListener('input', function() {
               window.studio.arrangement.setTrackPan(idx, parseInt(this.value, 10));
@@ -117,9 +117,8 @@ window.studio.bottom = (function() {
                         tracks.push({id, name});
                     });
                     // 始终用最新实例
-                    mixerInstance = new window.MixerPanel(document.getElementById('mixer-panel'), tracks);
-                    // expose for arrangement playback
-                    window.mixerInstance = mixerInstance;
+                    const mixerPanel = new window.MixerPanel(document.getElementById('mixer-panel'), tracks);
+                    window.mixerInstance = mixerPanel;
                     bottomInfo.textContent = '混音器';
                 } else {
                     bottomContent.innerHTML = tabContents[tabType] || '';

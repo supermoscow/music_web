@@ -184,7 +184,14 @@ window.studio.arrangement = (function() {
             // create audio chain nodes for this track
             trackObj.gainNode = audioCtx.createGain();
             trackObj.panner = audioCtx.createStereoPanner();
-            trackObj.gainNode.connect(trackObj.panner).connect(window.getMasterGainNode());
+            // 这里假设 mixerInstance 存在且 tracks 顺序与 arrangement 一致
+            if (window.mixerInstance && window.mixerInstance.tracks && window.mixerInstance.tracks[idx]) {
+                trackObj.mixerTrack = window.mixerInstance.tracks[idx];
+                trackObj.gainNode.connect(trackObj.panner).connect(trackObj.mixerTrack.inputNode);
+            } else {
+                // 兼容无 mixer 的情况
+                trackObj.gainNode.connect(trackObj.panner).connect(window.getMasterGainNode());
+            }
             tracks.push(trackObj);
             const row = document.createElement('div');
             row.className = 'arrangement-track-row';
@@ -1125,7 +1132,14 @@ window.studio.arrangement = (function() {
         const trackObj = {type, segments: [], muted: false, solo: false, volume: 1, pan: 0, armed: false};
         trackObj.gainNode = audioCtx.createGain();
         trackObj.panner = audioCtx.createStereoPanner();
-        trackObj.gainNode.connect(trackObj.panner).connect(window.getMasterGainNode());
+        // 这里假设 mixerInstance 存在且 tracks 顺序与 arrangement 一致
+        if (window.mixerInstance && window.mixerInstance.tracks && window.mixerInstance.tracks[idx]) {
+            trackObj.mixerTrack = window.mixerInstance.tracks[idx];
+            trackObj.gainNode.connect(trackObj.panner).connect(trackObj.mixerTrack.inputNode);
+        } else {
+            // 兼容无 mixer 的情况
+            trackObj.gainNode.connect(trackObj.panner).connect(window.getMasterGainNode());
+        }
         tracks.push(trackObj);
         const row = document.createElement('div');
         row.className = 'arrangement-track-row';
