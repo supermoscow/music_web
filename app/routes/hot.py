@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, abort
-from app.models import Hot, New, Original, Up, Song
+from app.models import Hot, New, Original, Up, Song,Bili,Classic,Rap,UK,Ele
 from sqlalchemy import and_
 
 bp = Blueprint('hot', __name__, url_prefix='/hot')
@@ -15,30 +15,49 @@ KEY_MAPPING = {
 @bp.route('/')
 def hot():
     """热门页主路由"""
+    chart_order = ['hot', 'new', 'original', 'up', 'classic', 'biliboard', 'rap', 'ele', 'UK']
     chart_data = {
         'hot': {'display': '热歌榜', 'songs': get_top_songs(Hot)},
         'new': {'display': '新歌榜', 'songs': get_top_songs(New)},
         'original': {'display': '原创榜', 'songs': get_top_songs(Original)},
-        'up': {'display': '飙升榜', 'songs': get_top_songs(Up)}
+        'up': {'display': '飙升榜', 'songs': get_top_songs(Up)},
+        'classic': {'display': '古典榜', 'songs': get_top_songs(Classic)},
+        'biliboard': {'display': 'Biliboard', 'songs': get_top_songs(Bili)},
+        'rap': {'display': '说唱榜', 'songs': get_top_songs(Rap)},
+        'ele': {'display': '电音榜', 'songs': get_top_songs(Ele)},
+        'UK': {'display': 'UK热门榜', 'songs': get_top_songs(UK)}
     }
     return render_template('hot/hot.html',
                            charts=chart_data,
+                           chart_order=chart_order,
                            KEY_MAPPING=KEY_MAPPING)
 
+# hot.py
+CHART_DISPLAY = {
+    'hot': '热歌榜',
+    'new': '新歌榜',
+    'original': '原创榜',
+    'up': '飙升榜',
+    'classic': '古典榜',
+    'biliboard': 'Biliboard',
+    'rap': '说唱榜',
+    'ele': '电音榜',
+    'UK': 'UK热门榜'
+}
 
-@bp.route('/charts/<chart_type>')
+@bp.route('/chart/<chart_type>')
 def chart_detail(chart_type):
-    """榜单详情页"""
     model = get_chart_model(chart_type)
     if not model:
-        abort(404, description=f"无效的榜单类型: {chart_type}")
-
-    songs = model.query.order_by(model.rank).all()
-    return render_template('hot/chart_detail.html',
-                           chart_type=chart_type.capitalize(),
-                           songs=songs)
-
-
+        abort(404)
+    songs = get_top_songs(model, limit=100)
+    display_name = CHART_DISPLAY.get(chart_type.lower(), chart_type)
+    return render_template(
+        'hot/chart_detail.html',
+        chart_type=chart_type,
+        display_name=display_name,
+        songs=songs
+    )
 @bp.route('/search', methods=['GET', 'POST'])
 def search():
     form_data = {
@@ -110,5 +129,11 @@ def get_chart_model(chart_type):
         'hot': Hot,
         'new': New,
         'original': Original,
-        'up': Up
+        'up': Up,
+        'ele':Ele,
+        'classic':Classic,
+        'UK':UK,
+        'rap':Rap,
+        'biliboard':Bili
+
     }.get(chart_type.lower())

@@ -1,24 +1,64 @@
 {% extends "base.html" %}
 
+{% block title %}音乐工具页面{% endblock %}
+
 {% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tool/tool.css') }}">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tool/tool.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="tool-container">
-    <aside class="tool-sidebar">
-        <h2>音乐分析工具</h2>
-        <nav>
-            <a href="{{ url_for('tool.analyse') }}" class="active">调式分析</a>
-            <!-- 其他工具链接 -->
-            <a href="{{ url_for('tool.track_separate') }}" class="active">音轨分离</a>
-            <a href="{{ url_for('tool.inspiration') }}" class="active">灵感记录</a>
-        </nav>
-    </aside>
+    <!-- 工具内容 -->
+    <div class="pt-20 pb-10">
+        <div class="container mx-auto px-4">
+            <div class="tool-header fade-in">
+                <h1 class="text-[clamp(1.8rem,5vw,3rem)] font-bold text-white mb-4">音乐分析工具</h1>
+            </div>
 
-    <main class="tool-main">
-        {% block tool_content %}{% endblock %}
-    </main>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+                <!-- 调式分析工具 -->
+                <a href="{{ url_for('tool.analyse') }}" class="tool-card bg-dark/50 rounded-xl p-6 border border-white/10 fade-in" style="animation-delay: 0.1s">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mr-4">
+                            <i class="fa fa-music text-primary text-xl"></i>
+                        </div>
+                        <h3 class="text-4xl font-bold">调式分析</h3>
+                    </div>
+                    <button class="w-full bg-primary/10 hover:bg-primary/20 text-primary py-6 rounded-lg transition-all">
+                    </button>
+                </a>
+
+                <!-- 音轨分离工具 -->
+                <a href="{{ url_for('tool.track_separate') }}" class="tool-card bg-dark/50 rounded-xl p-6 border border-white/10 fade-in" style="animation-delay: 0.2s">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center mr-4">
+                            <i class="fa fa-sliders text-secondary text-xl"></i>
+                        </div>
+                        <h3 class="text-4xl font-bold">音轨分离</h3>
+                    </div>
+                    <button class="w-full bg-secondary/10 hover:bg-secondary/20 text-secondary py-6 rounded-lg transition-all">
+
+                    </button>
+                </a>
+
+                <!-- 灵感记录工具 -->
+                <a href="{{ url_for('tool.inspiration') }}" class="tool-card bg-dark/50 rounded-xl p-6 border border-white/10 fade-in" style="animation-delay: 0.3s">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center mr-4">
+                            <i class="fa fa-lightbulb-o text-accent text-xl"></i>
+                        </div>
+                        <h3 class="text-4xl font-bold">灵感记录</h3>
+                    </div>
+                    <button class="w-full bg-accent/10 hover:bg-accent/20 text-accent py-6 rounded-lg transition-all">
+
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock %}
 
+<script src="{{ url_for('static', filename='js/tool/tool.js') }}"></script>
+{% endblock %}

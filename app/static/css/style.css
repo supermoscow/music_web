@@ -70,3 +70,100 @@ body {
   font-size: 1.25rem;
   padding: 1rem 2rem;
 }
+//* 全局样式 */
+body {
+    font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* 导航栏样式 */
+nav {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: center;
+    padding: 14px 0;
+}
+
+nav a {
+    color: #333;
+    text-decoration: none;
+    padding: 0 20px;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #007aff;
+}
+
+/* 欢迎部分样式 */
+.welcome {
+    text-align: center;
+    padding: 80px 0;
+}
+
+.welcome h1 {
+    font-size: 48px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.welcome p {
+    font-size: 24px;
+    font-weight: 300;
+}
+
+/* 四方格容器样式 */
+.four-blocks-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 两列布局 */
+    grid-gap: 20px; /* 板块之间的间距 */
+    max-width: 800px; /* 容器最大宽度 */
+    margin: 0 auto; /* 水平居中 */
+    padding: 20px;
+}
+
+/* 单个板块样式 */
+.block {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.block i {
+    font-size: 48px;
+    color: #007aff;
+    margin-bottom: 20px;
+}
+
+.block h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.block p {
+    font-size: 16px;
+    font-weight: 300;
+}
+
+.block:hover {
+    transform: translateY(-10px);
+}
+.four-blocks-container a.block {
+    color: inherit;           /* 继承父元素颜色 */
+    text-decoration: none;    /* 去掉下划线 */
+    display: block;           /* 让整个区块可点击 */
+    /* 你可以加更多样式美化 */
+}
+.four-blocks-container a.block:hover {
+    background: #f0f0f0;      /* 鼠标悬停效果 */
+}

@@ -43,12 +43,6 @@
     margin: 15px 0;
 }
 
-.piano-roll {
-    height: 100px;
-    background: #f0f0f0;
-    margin: 20px 0;
-    border-radius: 4px;
-}
 
 .examples button {
     margin-right: 10px;
@@ -101,25 +95,7 @@ button {
     cursor: pointer;
 }
 
-#piano-container {
-    position: relative !important;
-    width: 900px !important;
-    height: 180px !important;
-    margin: 20px auto !important;
-    user-select: none !important;
-    display: block !important;
-}
 
-.piano-key {
-    position: absolute !important;
-    bottom: 0 !important;
-    border: 1px solid #333 !important;
-    border-radius: 0 0 5px 5px !important;
-    cursor: pointer !important;
-    box-sizing: border-box !important;
-    transition: background 0.1s !important;
-    display: block !important;
-}
 
 .white-key {
     width: 40px !important;
@@ -143,5 +119,139 @@ button {
 .piano-key.active {
     background: #ffd700 !important;
 }
+   /* 页面加载动画 */
+    .fade-in {
+        opacity: 0;
+        animation: fadeIn 1s ease-in-out forwards;
+    }
 
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
+    /* 鼠标悬停特效 */
+    .tool-card {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .tool-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 背景动画 */
+    body {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+    }
+
+    @keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+    .tool-header {
+    margin-bottom: 10rem; /* 增加下方间距，可根据需要调整数值 */
+}/* 钢琴样式 */
+.piano-key {
+    position: relative;
+    display: inline-block;
+    transition: all 0.1s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+.piano-key.white {
+    width: 48px;
+    height: 100%;
+    background: linear-gradient(to bottom, #ffffff 0%, #f8f8f8 90%, #e0e0e0 100%);
+    border: 1px solid #cccccc;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.piano-key.white:hover {
+    background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 90%, #d0d0d0 100%);
+}
+
+.piano-key.white.active {
+    background: linear-gradient(to bottom, #e6e6e6 0%, #d9d9d9 90%, #c0c0c0 100%);
+    transform: translateY(2px);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.piano-key.black {
+    width: 28px;
+    height: 60%;
+    background: linear-gradient(to bottom, #222222 0%, #000000 100%);
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    margin-left: -14px;
+    margin-right: -14px;
+}
+
+.piano-key.black:hover {
+    background: linear-gradient(to bottom, #333333 0%, #111111 100%);
+}
+
+.piano-key.black.active {
+    background: linear-gradient(to bottom, #1a1a1a 0%, #0a0a0a 100%);
+    transform: translateY(2px);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+.piano-key-label {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.5);
+    user-select: none;
+}
+
+.piano-key.black .piano-key-label {
+    color: rgba(255, 255, 255, 0.7);
+    bottom: 8px;
+    font-size: 11px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .piano-key.white {
+        width: 36px;
+    }
+
+    .piano-key.black {
+        width: 22px;
+        margin-left: -11px;
+        margin-right: -11px;
+    }
+
+    .piano-key-label {
+        font-size: 10px;
+        bottom: 8px;
+    }
+
+    .piano-key.black .piano-key-label {
+        font-size: 9px;
+        bottom: 6px;
+    }
+}

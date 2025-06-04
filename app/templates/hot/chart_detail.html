@@ -5,26 +5,26 @@
   <div class="d-flex justify-content-between align-items-center mb-5">
     <div>
       <h1 class="display-5 fw-bold mb-2">
-        <i class="bi bi-trophy me-3"></i>{{ chart_type }}榜
+        <i class="bi bi-trophy me-3"></i>{{ display_name }}榜
       </h1>
       <nav style="--bs-breadcrumb-divider: '›';" aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="{{ url_for('hot.hot') }}">首页</a></li>
-          <li class="breadcrumb-item active" aria-current="page">{{ chart_type }}榜</li>
+          <li class="breadcrumb-item active" aria-current="page">{{ display_name }}榜</li>
         </ol>
       </nav>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-primary" data-bs-toggle="tooltip" title="分享榜单">
+      <button class="btn btn-outline-primary hover-effect" data-bs-toggle="tooltip" title="分享榜单">
         <i class="bi bi-share"></i>
       </button>
-      <a href="{{ url_for('hot.hot') }}" class="btn btn-outline-secondary">
+      <a href="{{ url_for('hot.hot') }}" class="btn btn-outline-secondary hover-effect">
         <i class="bi bi-arrow-left me-2"></i>返回
       </a>
     </div>
   </div>
 
-  <div class="card shadow-lg">
+  <div class="card shadow-lg rounded-3">
     <div class="card-header bg-white py-4">
       <div class="row align-items-center">
         <div class="col-md-6">
@@ -32,16 +32,16 @@
         </div>
         <div class="col-md-6 text-end">
           <div class="btn-group">
-            <button class="btn btn-outline-secondary active">实时榜</button>
-            <button class="btn btn-outline-secondary">历史榜</button>
-            <button class="btn btn-outline-secondary">趋势图</button>
+            <button class="btn btn-outline-secondary active hover-effect">实时榜</button>
+            <button class="btn btn-outline-secondary hover-effect">历史榜</button>
+            <button class="btn btn-outline-secondary hover-effect">趋势图</button>
           </div>
         </div>
       </div>
     </div>
 
     <div class="table-responsive">
-      <table class="table table-hover align-middle">
+      <table class="table table-striped table-hover align-middle">
         <thead class="table-light">
           <tr>
             <th style="width: 80px" class="text-center">排名</th>
@@ -55,13 +55,11 @@
           {% for song in songs %}
           <tr>
             <td class="text-center">
-              <span class="badge bg-primary badge-custom">#{{ song.rank }}</span>
+              <span class="badge bg-primary badge-custom rounded-3">#{{ song.rank }}</span>
             </td>
             <td>
               <div class="d-flex align-items-center">
-                <img src="https://via.placeholder.com/40"
-                     class="rounded me-3"
-                     alt="专辑封面">
+
                 <div>
                   <h6 class="mb-1">{{ song.name }}</h6>
                   <small class="text-muted">{{ song.singer }}</small>
@@ -76,12 +74,12 @@
               </div>
             </td>
             <td class="text-center">
-              <button class="btn btn-sm btn-outline-primary"
+              <button class="btn btn-sm btn-outline-primary hover-effect"
                       data-bs-toggle="tooltip"
                       title="播放">
                 <i class="bi bi-play-circle"></i>
               </button>
-              <button class="btn btn-sm btn-outline-secondary"
+              <button class="btn btn-sm btn-outline-secondary hover-effect"
                       data-bs-toggle="tooltip"
                       title="收藏">
                 <i class="bi bi-heart"></i>
@@ -102,4 +100,10 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl)
 })
 </script>
+
+<style>
+.hover-effect:hover {
+  filter: brightness(1.1);
+}
+</style>
 {% endblock %}

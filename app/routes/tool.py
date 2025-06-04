@@ -1,10 +1,9 @@
 from flask import Blueprint, render_template, jsonify, request, current_app
-from app.services.audio_analyzer import KeyAnalyzer
+from ..services.audio_analyzer import KeyAnalyzer
 import tempfile
 import os
 from flask import send_file
 from flask import send_file
-
 bp = Blueprint('tool', __name__, url_prefix='/tool')
 
 
@@ -81,7 +80,6 @@ def handle_track_separate():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 @bp.route('/api/download_stem')
 def download_stem():
     dir_ = request.args.get('dir')

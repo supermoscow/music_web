@@ -28,6 +28,20 @@ class Original(BaseChart):
 class Up(BaseChart):
     __tablename__ = 'up'
 
+class Bili(BaseChart):
+    __tablename__ = 'biliboard'
+
+class Classic(BaseChart):
+    __tablename__ = 'classic'
+
+class Rap(BaseChart):
+    __tablename__ = 'rap'
+
+class UK(BaseChart):
+    __tablename__ = 'UK'
+
+class Ele(BaseChart):
+    __tablename__ = 'ele'
 
 # --------------------------
 # 全量歌曲表
