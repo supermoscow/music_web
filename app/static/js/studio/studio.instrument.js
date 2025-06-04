@@ -60,6 +60,7 @@ let c4Buffer = null;
 // 预加载c4.mp3
 function loadC4Buffer() {
     if (c4Buffer) return Promise.resolve();
+    const audioCtx = window.getStudioAudioCtx();
     return fetch(instrumentSample)
         .then(res => res.arrayBuffer())
         .then(buf => audioCtx.decodeAudioData(buf))
@@ -421,7 +422,6 @@ function createPianoWindow(container, gridCols) {
                 catSub.style.minWidth = '120px';
                 catSub.style.borderRadius = '6px';
                 catSub.style.boxShadow = '0 2px 12px #0008';
-                catSub.style.zIndex = '1001';
                 items.forEach(s => {
                     const leaf = document.createElement('div');
                     leaf.className = 'menu-item';
@@ -466,7 +466,6 @@ function createPianoWindow(container, gridCols) {
 }
 
 // Audio playback utilities
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function getSemitoneDiff(noteName) {
     const match = noteName.match(/([A-G]#?)(\d)/);
     if (!match) return 0;
@@ -475,14 +474,24 @@ function getSemitoneDiff(noteName) {
     return (octave - 4) * 12 + noteIdx;
 }
 function playPianoNote(noteName) {
-    loadC4Buffer().then(() => {
-        const src = audioCtx.createBufferSource();
-        src.buffer = c4Buffer;
-        const semitone = getSemitoneDiff(noteName);
-        src.playbackRate.value = Math.pow(2, semitone/12);
-        src.connect(audioCtx.destination);
-        src.start();
-    });
+    // 这里假设 window._instrumentSoundbank 已经加载
+    const audioCtx = window.getStudioAudioCtx();
+    const masterGain = window.getMasterGainNode();
+    let sampleUrl = null;
+    if (window._instrumentSoundbank && window._instrumentSoundbank[noteName]) {
+        sampleUrl = window._instrumentSoundbank[noteName];
+    } else {
+        sampleUrl = instrumentSample;
+    }
+    fetch(sampleUrl)
+        .then(res => res.arrayBuffer())
+        .then(buf => audioCtx.decodeAudioData(buf))
+        .then(buffer => {
+            const src = audioCtx.createBufferSource();
+            src.buffer = buffer;
+            src.connect(masterGain);
+            src.start(0);
+        });
 }
 
 // Export instrument API

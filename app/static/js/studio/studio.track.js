@@ -19,8 +19,18 @@ window.studio.track = (function() {
             const startTime = parseFloat(block.dataset.startTime);
             const endTime = parseFloat(block.dataset.endTime);
             if (playheadPosition >= startTime && playheadPosition <= endTime) {
-                const audio = new Audio(block.dataset.audioSrc);
-                audio.play();
+                // 统一用 Web Audio 播放 drum block
+                const audioCtx = window.getStudioAudioCtx();
+                const masterGain = window.getMasterGainNode();
+                fetch(block.dataset.audioSrc)
+                    .then(res => res.arrayBuffer())
+                    .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
+                    .then(buffer => {
+                        const src = audioCtx.createBufferSource();
+                        src.buffer = buffer;
+                        src.connect(masterGain);
+                        src.start(0);
+                    });
             }
         });
     }

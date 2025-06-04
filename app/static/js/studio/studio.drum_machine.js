@@ -245,7 +245,7 @@ async function renderDrumMachineEditor(currentSegment) {
         }
 
         // Web Audio API: 预加载鼓样本
-        const audioCtx = window._drumAudioCtx || (window._drumAudioCtx = new (window.AudioContext || window.webkitAudioContext)());
+        const audioCtx = window.getStudioAudioCtx();
         const drumBuffers = {};
         async function loadBuffer(url) {
           if (drumBuffers[url]) return drumBuffers[url];
@@ -309,7 +309,7 @@ async function renderDrumMachineEditor(currentSegment) {
                 src.buffer = buffer;
                 const gainNode = audioCtx.createGain();
                 gainNode.gain.value = trackGains[rowIdx];
-                src.connect(gainNode).connect(audioCtx.destination);
+                src.connect(gainNode).connect(window.getMasterGainNode());
                 src.start(playTime);
                 scheduledSources.push(src);
               }
